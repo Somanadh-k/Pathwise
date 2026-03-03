@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pathwise — Feedback</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Syne+Mono&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --cream: #F0EBE1;
+    --cream-dark: #E8E1D6;
+    --ink: #1A1612;
+    --ink-mid: #3A3128;
+    --ink-mute: #8A7F72;
+    --ink-faint: #C4BAB0;
+    --accent: #E84B1A;
+    --line: rgba(26,22,18,0.12);
+    --grid: rgba(26,22,18,0.06);
+    --success: #16A34A;
+    --success-bg: rgba(22,163,74,0.05);
+
+    /* Sentiment colors */
+    --frustrated: #DC2626;
+    --confused:   #CA8A04;
+    --satisfied:  #16A34A;
+    --motivated:  #7C3AED;
+    --neutral:    #8A7F72;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--cream); color: var(--ink); font-family: 'Inter', sans-serif; min-height: 100vh; }
+
+  .grid-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 0; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .grid-col { border-right: 1px solid var(--grid); }
+  .grid-col:last-child { border-right: none; }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;
+    border-bottom: 1px solid var(--line); background: var(--cream); height: 52px;
+  }
+  .nav-logo { grid-column:1; display:flex; align-items:center; padding:0 28px; font-family:'Syne',sans-serif; font-weight:800; font-size:15px; border-right:1px solid var(--line); }
+  .nav-mid  { grid-column:2/4; display:flex; align-items:center; justify-content:center; font-size:10px; letter-spacing:4px; text-transform:uppercase; color:var(--ink-mute); border-right:1px solid var(--line); }
+  .nav-mid-acc { color:var(--accent); margin-left:6px; }
+  .nav-right { grid-column:4; display:flex; align-items:center; justify-content:flex-end; padding:0 28px; }
+  .nav-back { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); cursor:pointer; background:none; border:none; transition:color .2s; }
+  .nav-back:hover { color:var(--ink); }
+
+  /* PROGRESS */
+  .progress-wrap { height:3px; background:var(--line); }
+  .progress-fill { height:100%; background:var(--accent); width:0%; transition:width .6s ease; }
+
+  /* MAIN LAYOUT */
+  main { position:relative; z-index:1; min-height:calc(100vh - 55px); }
+
+  /* ══ STEP A: FEEDBACK FORM ══ */
+  .feedback-form { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; }
+
+  /* Left column — context */
+  .form-sidebar {
+    grid-column:1; border-right:1px solid var(--line); padding:40px 28px;
+    display:flex; flex-direction:column; gap:28px;
+    position:sticky; top:52px; height:calc(100vh - 52px); overflow-y:auto;
+  }
+  .sidebar-eyebrow { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--ink-mute); }
+  .sidebar-title { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; letter-spacing:-0.5px; line-height:1.1; }
+  .sidebar-title .acc { color:var(--accent); }
+  .sidebar-desc { font-size:12px; color:var(--ink-mute); line-height:1.8; font-weight:300; }
+
+  /* Test score summary */
+  .score-mini { border:1px solid var(--line); }
+  .score-mini-row { display:flex; justify-content:space-between; padding:10px 14px; border-bottom:1px solid var(--line); }
+  .score-mini-row:last-child { border-bottom:none; }
+  .sml { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--ink-mute); }
+  .smv { font-family:'Syne Mono',monospace; font-size:12px; font-weight:700; }
+
+  .ai-tip { background:var(--cream-dark); border:1px solid var(--line); padding:16px; }
+  .ai-tip-label { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+  .ai-tip-text { font-size:11px; color:var(--ink-mute); line-height:1.7; }
+
+  /* Right — form */
+  .form-main { grid-column:2/5; padding:40px; display:flex; flex-direction:column; gap:36px; padding-bottom:100px; }
+
+  .field-label { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--ink-mute); display:block; margin-bottom:12px; }
+  .field-hint  { font-size:11px; color:var(--ink-faint); margin-bottom:14px; font-weight:300; }
+
+  /* Mood selector */
+  .mood-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+  .mood-btn {
+    padding:18px 8px; border:1px solid var(--line); background:transparent;
+    cursor:pointer; transition:all .2s; display:flex; flex-direction:column;
+    align-items:center; gap:8px; position:relative; overflow:hidden;
+  }
+  .mood-btn::after { content:''; position:absolute; bottom:0; left:0; width:100%; height:3px; transform:scaleX(0); transition:transform .25s; }
+  .mood-btn:hover { background:var(--cream-dark); }
+  .mood-btn.selected { border-color:var(--ink); background:var(--ink); }
+  .mood-emoji { font-size:24px; }
+  .mood-label { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink-mute); transition:color .2s; }
+  .mood-btn.selected .mood-label { color:#fff; }
+
+  /* Mood colors */
+  .mood-btn[data-mood="frustrated"]::after { background:var(--frustrated); }
+  .mood-btn[data-mood="confused"]::after   { background:var(--confused); }
+  .mood-btn[data-mood="neutral"]::after    { background:var(--neutral); }
+  .mood-btn[data-mood="satisfied"]::after  { background:var(--satisfied); }
+  .mood-btn[data-mood="motivated"]::after  { background:var(--motivated); }
+  .mood-btn:hover::after, .mood-btn.selected::after { transform:scaleX(1); }
+
+  /* Quick pills */
+  .pill-wrap { display:flex; flex-wrap:wrap; gap:8px; }
+  .pill {
+    padding:9px 18px; border:1px solid var(--line); background:transparent;
+    font-size:12px; color:var(--ink-mute); cursor:pointer; transition:all .2s;
+    position:relative; overflow:hidden;
+  }
+  .pill::before { content:''; position:absolute; bottom:0; left:0; height:2px; width:0%; background:var(--accent); transition:width .25s; }
+  .pill:hover { border-color:var(--ink-mute); color:var(--ink); background:var(--cream-dark); }
+  .pill:hover::before { width:100%; }
+  .pill.selected { background:var(--ink); border-color:var(--ink); color:#fff; }
+  .pill.selected::before { display:none; }
+
+  /* Textarea */
+  .feedback-textarea {
+    width:100%; min-height:160px; padding:18px 20px;
+    background:var(--cream-dark); border:1px solid var(--line);
+    font-family:'Inter',sans-serif; font-size:13px; color:var(--ink);
+    resize:vertical; outline:none; line-height:1.8; transition:border-color .2s;
+  }
+  .feedback-textarea:focus { border-color:var(--ink); }
+  .feedback-textarea::placeholder { color:var(--ink-faint); }
+  .char-count { font-family:'Syne Mono',monospace; font-size:10px; color:var(--ink-faint); margin-top:6px; text-align:right; }
+
+  /* Specific issue pills */
+  .issue-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .issue-btn {
+    padding:14px 16px; border:1px solid var(--line); background:transparent;
+    cursor:pointer; transition:all .2s; text-align:left; display:flex; gap:12px; align-items:flex-start;
+  }
+  .issue-btn:hover { background:var(--cream-dark); border-color:var(--ink-mute); }
+  .issue-btn.selected { background:var(--ink); border-color:var(--ink); color:#fff; }
+  .issue-icon { font-size:14px; flex-shrink:0; }
+  .issue-text { font-size:12px; color:var(--ink-mute); transition:color .2s; }
+  .issue-btn.selected .issue-text { color:#fff; }
+
+  /* Submit btn */
+  .submit-btn {
+    padding:16px 40px; background:var(--ink); color:#fff; border:none;
+    font-family:'Syne',sans-serif; font-size:11px; font-weight:700;
+    letter-spacing:3px; text-transform:uppercase; cursor:pointer;
+    transition:background .2s; display:flex; align-items:center; gap:12px; align-self:flex-start;
+  }
+  .submit-btn:hover { background:var(--accent); }
+  .submit-btn:disabled { background:var(--ink-faint); cursor:not-allowed; }
+  .submit-btn .btn-arrow { transition:transform .2s; }
+  .submit-btn:hover .btn-arrow { transform:translateX(4px); }
+
+  /* ══ LOADING OVERLAY ══ */
+  .analyzing-overlay {
+    display:none; position:fixed; inset:0; background:var(--cream); z-index:200;
+  }
+  .analyzing-overlay.active { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; }
+  .ao-left {
+    grid-column:1; border-right:1px solid var(--line); padding:48px 28px;
+    display:flex; flex-direction:column; justify-content:center; gap:20px;
+  }
+  .ao-main { grid-column:2/5; padding:48px 40px; display:flex; flex-direction:column; justify-content:center; }
+  .ao-label { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:14px; }
+  .ao-title { font-family:'Syne',sans-serif; font-size:clamp(32px,5vw,56px); font-weight:800; letter-spacing:-2px; line-height:0.95; margin-bottom:28px; }
+  .ao-title .acc { color:var(--accent); }
+  .pipeline { border:1px solid var(--line); margin-bottom:24px; }
+  .p-step { padding:16px 24px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:16px; transition:background .3s; }
+  .p-step:last-child { border-bottom:none; }
+  .p-step.running { background:var(--cream-dark); }
+  .p-step.done { background:var(--success-bg); }
+  .ps-n { font-family:'Syne Mono',monospace; font-size:11px; color:var(--ink-mute); width:24px; flex-shrink:0; }
+  .ps-name { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; flex:1; }
+  .ps-bar { width:100px; height:2px; background:var(--line); overflow:hidden; flex-shrink:0; }
+  .ps-fill { height:100%; width:0%; background:var(--accent); transition:width 1.2s ease; }
+  .ps-fill.running { width:80%; }
+  .ps-fill.done { width:100%; background:var(--success); }
+  .ps-stat { font-size:9px; letter-spacing:2px; text-transform:uppercase; width:72px; text-align:right; flex-shrink:0; }
+  .ps-stat.waiting { color:var(--ink-faint); }
+  .ps-stat.running { color:var(--accent); }
+  .ps-stat.done    { color:var(--success); }
+  .feedback-chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .fc { padding:6px 14px; border:1px solid var(--line); font-size:10px; font-family:'Syne Mono',monospace; color:var(--ink-mute); animation:chipIn .4s ease forwards; opacity:0; }
+  @keyframes chipIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+  /* Sentiment indicator */
+  .sentiment-card {
+    border:1px solid var(--line); padding:18px 22px; display:flex; align-items:center; gap:16px;
+    animation:slideIn .3s ease;
+  }
+  @keyframes slideIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+  .sent-bar { width:4px; min-height:48px; border-radius:2px; flex-shrink:0; }
+  .sent-content { flex:1; }
+  .sent-label { font-size:9px; letter-spacing:3px; text-transform:uppercase; margin-bottom:4px; font-family:'Syne Mono',monospace; }
+  .sent-mood { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; margin-bottom:2px; }
+  .sent-text { font-size:11px; color:var(--ink-mute); line-height:1.6; }
+
+  /* ══ RESULTS SECTION ══ */
+  .results-section { display:none; }
+  .results-section.active { display:block; }
+
+  /* Hero result */
+  .result-hero { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-bottom:1px solid var(--line); }
+  .rh-left { grid-column:1/3; padding:56px 28px; border-right:1px solid var(--line); }
+  .rh-eyebrow { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:14px; }
+  .rh-title { font-family:'Syne',sans-serif; font-size:clamp(40px,5.5vw,64px); font-weight:800; letter-spacing:-2px; line-height:0.92; margin-bottom:18px; }
+  .rh-title .acc { color:var(--accent); }
+  .rh-empathy { font-size:13px; color:var(--ink-mid); line-height:1.9; max-width:360px; font-weight:300; border-left:2px solid var(--accent); padding-left:18px; }
+  .rh-right { grid-column:3/5; padding:40px 28px; display:flex; flex-direction:column; gap:0; }
+
+  /* Sentiment result card */
+  .sentiment-result {
+    border:1px solid var(--line); padding:20px 24px; margin-bottom:16px;
+    display:flex; align-items:center; gap:16px;
+  }
+  .sr-emoji { font-size:32px; }
+  .sr-content { flex:1; }
+  .sr-mood-label { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:4px; }
+  .sr-mood { font-family:'Syne',sans-serif; font-size:18px; font-weight:800; }
+  .sr-intensity { font-size:11px; color:var(--ink-mute); margin-top:2px; }
+  .sr-action-label { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--accent); margin-top:8px; }
+  .sr-action { font-size:12px; color:var(--ink-mid); line-height:1.7; margin-top:4px; }
+
+  /* Adjusted recommendations */
+  .adj-section { border-bottom:1px solid var(--line); }
+  .adj-header { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-bottom:1px solid var(--line); height:52px; }
+  .adj-h-title { grid-column:1/3; padding:0 28px; display:flex; align-items:center; font-family:'Syne',sans-serif; font-size:11px; font-weight:700; letter-spacing:4px; text-transform:uppercase; border-right:1px solid var(--line); }
+  .adj-h-badge { grid-column:3; padding:0 28px; display:flex; align-items:center; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--accent); border-right:1px solid var(--line); }
+  .adj-h-count { grid-column:4; padding:0 28px; display:flex; align-items:center; justify-content:flex-end; font-family:'Syne Mono',monospace; font-size:11px; color:var(--ink-mute); }
+  .adj-card { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-bottom:1px solid var(--line); transition:background .2s; }
+  .adj-card:hover { background:var(--cream-dark); }
+  .adj-card:last-child { border-bottom:none; }
+  .ac-left { grid-column:1; padding:28px; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:space-between; gap:12px; }
+  .ac-num { font-family:'Syne Mono',monospace; font-size:10px; color:var(--ink-faint); letter-spacing:2px; }
+  .ac-priority { font-size:9px; letter-spacing:2px; text-transform:uppercase; padding:4px 10px; }
+  .priority-high   { background:rgba(220,38,38,0.06); color:#DC2626; border:1px solid #DC2626; }
+  .priority-medium { background:rgba(202,138,4,0.06);  color:#CA8A04; border:1px solid #CA8A04; }
+  .priority-low    { background:var(--success-bg); color:var(--success); border:1px solid var(--success); }
+  .ac-main { grid-column:2/4; padding:28px; border-right:1px solid var(--line); display:flex; flex-direction:column; gap:8px; }
+  .ac-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:800; }
+  .ac-desc  { font-size:12px; color:var(--ink-mute); line-height:1.7; font-weight:300; }
+  .ac-why-changed { font-size:11px; color:var(--accent); margin-top:4px; font-style:italic; }
+  .ac-right { grid-column:4; padding:28px; display:flex; flex-direction:column; gap:12px; justify-content:center; }
+  .ac-weeks { font-family:'Syne Mono',monospace; font-size:11px; color:var(--ink-mute); }
+  .ac-link { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--accent); text-decoration:none; border:1px solid rgba(232,75,26,0.3); padding:8px 14px; text-align:center; transition:all .2s; }
+  .ac-link:hover { background:var(--accent); color:#fff; }
+
+  /* Next steps row */
+  .next-steps { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-bottom:1px solid var(--line); }
+  .ns-left { grid-column:1/3; padding:40px 28px; border-right:1px solid var(--line); }
+  .ns-title { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; letter-spacing:-0.5px; margin-bottom:8px; }
+  .ns-title .acc { color:var(--accent); }
+  .ns-desc { font-size:12px; color:var(--ink-mute); line-height:1.8; }
+  .ns-right { grid-column:3/5; padding:40px 28px; display:flex; flex-direction:column; gap:10px; justify-content:center; }
+  .btn-primary { padding:14px 28px; background:var(--ink); color:#fff; border:none; font-family:'Syne',sans-serif; font-size:10px; font-weight:700; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:background .2s; }
+  .btn-primary:hover { background:var(--accent); }
+  .btn-secondary { padding:12px 24px; background:transparent; color:var(--ink-mute); border:1px solid var(--line); font-family:'Syne',sans-serif; font-size:10px; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:all .2s; }
+  .btn-secondary:hover { border-color:var(--ink); color:var(--ink); }
+
+  /* Session log notice */
+  .session-log { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; background:var(--ink); }
+  .sl-left { grid-column:1; padding:20px 28px; border-right:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; }
+  .sl-label { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:rgba(255,255,255,0.4); }
+  .sl-main { grid-column:2/4; padding:20px 28px; border-right:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; }
+  .sl-text { font-size:11px; color:rgba(255,255,255,0.6); font-family:'Syne Mono',monospace; }
+  .sl-right { grid-column:4; padding:20px 28px; display:flex; align-items:center; justify-content:flex-end; }
+  .sl-id { font-family:'Syne Mono',monospace; font-size:10px; color:var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="grid-overlay">
+  <div class="grid-col"></div><div class="grid-col"></div>
+  <div class="grid-col"></div><div class="grid-col"></div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">PATHWISE</div>
+  <div class="nav-mid">Feedback <span class="nav-mid-acc">· Step 4 of 4</span></div>
+  <div class="nav-right">
+    <button class="nav-back" onclick="window.location.href='progress.html'" style="color:var(--accent); border:1px solid var(--accent); padding:6px 14px;">Progress →</button>
+    <button class="nav-back" onclick="window.location.href='results.html'">← Back to Plan</button>
+  </div>
+</nav>
+<div class="progress-wrap"><div class="progress-fill" id="progressFill" style="width:75%"></div></div>
+
+<!-- ANALYZING OVERLAY -->
+<div class="analyzing-overlay" id="analyzingOverlay">
+  <div class="ao-left">
+    <div class="ao-label">Sentiment Detected</div>
+    <div id="ao-profile" style="font-family:'Syne Mono',monospace; font-size:11px; color:var(--ink-mute); line-height:2.4;"></div>
+    <div class="sentiment-card" id="ao-sentiment" style="display:none;">
+      <div class="sent-bar" id="ao-sent-bar"></div>
+      <div class="sent-content">
+        <div class="sent-label">Mood Detected</div>
+        <div class="sent-mood" id="ao-sent-mood">—</div>
+        <div class="sent-text" id="ao-sent-text">—</div>
+      </div>
+    </div>
+  </div>
+  <div class="ao-main">
+    <div class="ao-label">· Processing Feedback</div>
+    <h2 class="ao-title">Adjusting your<br/>learning <span class="acc">plan.</span></h2>
+    <div class="pipeline">
+      <div class="p-step" id="ps1"><span class="ps-n">01</span><span class="ps-name">Reading your feedback</span><div class="ps-bar"><div class="ps-fill" id="pf1"></div></div><span class="ps-stat waiting" id="pst1">Waiting</span></div>
+      <div class="p-step" id="ps2"><span class="ps-n">02</span><span class="ps-name">Detecting sentiment</span><div class="ps-bar"><div class="ps-fill" id="pf2"></div></div><span class="ps-stat waiting" id="pst2">Waiting</span></div>
+      <div class="p-step" id="ps3"><span class="ps-n">03</span><span class="ps-name">Adjusting recommendations</span><div class="ps-bar"><div class="ps-fill" id="pf3"></div></div><span class="ps-stat waiting" id="pst3">Waiting</span></div>
+      <div class="p-step" id="ps4"><span class="ps-n">04</span><span class="ps-name">Generating empathy response</span><div class="ps-bar"><div class="ps-fill" id="pf4"></div></div><span class="ps-stat waiting" id="pst4">Waiting</span></div>
+    </div>
+    <div class="feedback-chips" id="ao-chips"></div>
+  </div>
+</div>
+
+<main>
+
+  <!-- ══════════ FEEDBACK FORM ══════════ -->
+  <div id="formSection">
+    <div class="feedback-form">
+
+      <!-- Sidebar -->
+      <div class="form-sidebar">
+        <div>
+          <div class="sidebar-eyebrow">Step 04</div>
+          <div class="sidebar-title" style="margin:8px 0;">How did the<br/><span class="acc">test go?</span></div>
+          <div class="sidebar-desc">Your feedback helps the AI understand your experience and adjust your learning plan to work better for you.</div>
+        </div>
+
+        <!-- Test score mini -->
+        <div>
+          <div style="font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:8px;">Your Test Result</div>
+          <div class="score-mini" id="scoreMini">
+            <div class="score-mini-row"><span class="sml">Score</span><span class="smv" id="sm-score">—</span></div>
+            <div class="score-mini-row"><span class="sml">Accuracy</span><span class="smv" id="sm-acc">—</span></div>
+            <div class="score-mini-row"><span class="sml">Subject</span><span class="smv" id="sm-subject">—</span></div>
+          </div>
+        </div>
+
+        <div class="ai-tip">
+          <div class="ai-tip-label">How this works</div>
+          <div class="ai-tip-text">The AI reads your written feedback, detects your emotional state (frustrated, confused, satisfied, motivated), and adjusts your course recommendations and difficulty level accordingly.</div>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <div class="form-main">
+
+        <!-- Mood -->
+        <div>
+          <label class="field-label">How are you feeling about this subject right now?</label>
+          <div class="mood-grid" id="moodGrid">
+            <button class="mood-btn" data-mood="frustrated" onclick="selectMood(this)">
+              <span class="mood-emoji">😤</span>
+              <span class="mood-label">Frustrated</span>
+            </button>
+            <button class="mood-btn" data-mood="confused" onclick="selectMood(this)">
+              <span class="mood-emoji">😕</span>
+              <span class="mood-label">Confused</span>
+            </button>
+            <button class="mood-btn" data-mood="neutral" onclick="selectMood(this)">
+              <span class="mood-emoji">😐</span>
+              <span class="mood-label">Neutral</span>
+            </button>
+            <button class="mood-btn" data-mood="satisfied" onclick="selectMood(this)">
+              <span class="mood-emoji">😊</span>
+              <span class="mood-label">Satisfied</span>
+            </button>
+            <button class="mood-btn" data-mood="motivated" onclick="selectMood(this)">
+              <span class="mood-emoji">🔥</span>
+              <span class="mood-label">Motivated</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Difficulty perception -->
+        <div>
+          <label class="field-label">How did the test feel?</label>
+          <div class="pill-wrap" id="diffPills">
+            <button class="pill" data-val="too easy" onclick="selectPill(this,'diff')">Too Easy</button>
+            <button class="pill" data-val="just right" onclick="selectPill(this,'diff')">Just Right</button>
+            <button class="pill" data-val="too hard" onclick="selectPill(this,'diff')">Too Hard</button>
+            <button class="pill" data-val="too fast pace" onclick="selectPill(this,'diff')">Too Fast</button>
+            <button class="pill" data-val="too slow pace" onclick="selectPill(this,'diff')">Too Slow</button>
+          </div>
+        </div>
+
+        <!-- Specific issues -->
+        <div>
+          <label class="field-label">Any specific issues? <span style="color:var(--ink-faint); font-size:10px;">(Select all that apply)</span></label>
+          <div class="issue-grid" id="issueGrid">
+            <button class="issue-btn" data-issue="explanations were unclear" onclick="toggleIssue(this)">
+              
+              <span class="issue-text">Explanations were unclear</span>
+            </button>
+            <button class="issue-btn" data-issue="questions too conceptual" onclick="toggleIssue(this)">
+              
+              <span class="issue-text">Questions too conceptual</span>
+            </button>
+            <button class="issue-btn" data-issue="need more practice problems" onclick="toggleIssue(this)">
+              
+              <span class="issue-text">Need more practice problems</span>
+            </button>
+            <button class="issue-btn" data-issue="topics not relevant to syllabus" onclick="toggleIssue(this)">
+              
+              <span class="issue-text">Topics not relevant to syllabus</span>
+            </button>
+            <button class="issue-btn" data-issue="want video explanations first" onclick="toggleIssue(this)">
+              
+              <span class="issue-text">Want video explanations first</span>
+            </button>
+            <button class="issue-btn" data-issue="resources were too advanced" onclick="toggleIssue(this)">
+              
+              <span class="issue-text">Resources were too advanced</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Free text -->
+        <div>
+          <label class="field-label">Tell us more <span style="color:var(--ink-faint); font-size:10px;">(optional but helpful)</span></label>
+          <div class="field-hint">Write freely — the AI reads this to understand exactly how you're feeling and what to change.</div>
+          <textarea
+            class="feedback-textarea"
+            id="feedbackText"
+            placeholder="e.g. The algebra questions were fine but I'm still very confused about trigonometry. The video resources helped but I need more practice problems before I feel ready..."
+            oninput="updateCharCount(this)"
+            maxlength="600"
+          ></textarea>
+          <div class="char-count"><span id="charCount">0</span> / 600</div>
+        </div>
+
+        <!-- Submit -->
+        <div>
+          <button class="submit-btn" id="submitBtn" onclick="submitFeedback()" disabled>
+            Analyze My Feedback <span class="btn-arrow">→</span>
+          </button>
+          <div style="font-size:10px; color:var(--ink-faint); margin-top:10px; letter-spacing:1px;">The AI will detect your mood and adjust your learning plan in real time.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ RESULTS SECTION ══════════ -->
+  <div class="results-section" id="resultsSection">
+
+    <!-- Hero -->
+    <div class="result-hero">
+      <div class="rh-left">
+        <div class="rh-eyebrow">Feedback Processed · AI Response</div>
+        <h1 class="rh-title">Plan <span class="acc">adjusted</span><br/>for you.</h1>
+        <p class="rh-empathy" id="empathy-text">—</p>
+      </div>
+      <div class="rh-right">
+        <div class="sentiment-result">
+          <div class="sr-emoji" id="sr-emoji">—</div>
+          <div class="sr-content">
+            <div class="sr-mood-label">Sentiment Detected</div>
+            <div class="sr-mood" id="sr-mood">—</div>
+            <div class="sr-intensity" id="sr-intensity">—</div>
+            <div class="sr-action-label">AI Action Taken</div>
+            <div class="sr-action" id="sr-action">—</div>
+          </div>
+        </div>
+        <!-- Adjustment tags -->
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;" id="adj-tags"></div>
+      </div>
+    </div>
+
+    <!-- Adjusted recommendations -->
+    <div class="adj-section">
+      <div class="adj-header">
+        <div class="adj-h-title">Adjusted Recommendations</div>
+        <div class="adj-h-badge">↻ Updated for you</div>
+        <div class="adj-h-count" id="adj-count">—</div>
+      </div>
+      <div id="adj-courses"></div>
+    </div>
+
+    <!-- Next steps -->
+    <div class="next-steps">
+      <div class="ns-left">
+        <div class="ns-title">What to do <span class="acc">next.</span></div>
+        <div class="ns-desc" id="next-step-text">Follow the adjusted recommendations above. When you're ready, retake the assessment to measure your improvement.</div>
+      </div>
+      <div class="ns-right">
+        <button class="btn-primary" onclick="window.location.href='progress.html'">View Progress →</button>
+        <button class="btn-primary" onclick="window.location.href='results.html'" style="background:var(--ink-mid);">Full Plan</button>
+        <button class="btn-primary" onclick="goToTest()" style="background:var(--accent);">Retake Test →</button>
+        <button class="btn-secondary" onclick="window.location.href='onboarding.html'">Start Over</button>
+      </div>
+    </div>
+
+    <!-- Session log strip -->
+    <div class="session-log">
+      <div class="sl-left"><span class="sl-label">Session Logged</span></div>
+      <div class="sl-main"><span class="sl-text" id="sl-text">—</span></div>
+      <div class="sl-right"><span class="sl-id" id="sl-id">—</span></div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  // ── CONFIG ──
+  const GEMINI_KEY = 'AIzaSyDm1UFiTyCnFApoS1MO62c6Gke0lBHH914'; // 🔑 same key as other pages
+  const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`;
+
+  // ── STATE ──
+  const urlParams  = new URLSearchParams(window.location.search);
+  const testResult = JSON.parse(sessionStorage.getItem('pathwise_test_result') || '{}');
+  const profile    = {
+    subject: urlParams.get('subject') || sessionStorage.getItem('ps') || 'Mathematics',
+    topics:  (urlParams.get('topics') || 'Algebra').split(','),
+    performance: urlParams.get('perf') || 'Weak (40–60%)',
+    goal:    urlParams.get('goal')    || 'Board Exam (CBSE)',
+  };
+
+  let selectedMood   = '';
+  let selectedDiff   = '';
+  let selectedIssues = [];
+
+  // ── INIT ──
+  window.onload = () => {
+    // Populate score mini
+    if (testResult.score !== undefined) {
+      document.getElementById('sm-score').textContent   = `${testResult.score}/${testResult.total}`;
+      document.getElementById('sm-acc').textContent     = `${testResult.pct}%`;
+    }
+    document.getElementById('sm-subject').textContent = profile.subject;
+  };
+
+  // ── MOOD SELECT ──
+  function selectMood(el) {
+    document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedMood = el.dataset.mood;
+    validateForm();
+  }
+
+  function selectPill(el, group) {
+    document.querySelectorAll(`#diffPills .pill`).forEach(p => p.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedDiff = el.dataset.val;
+    validateForm();
+  }
+
+  function toggleIssue(el) {
+    el.classList.toggle('selected');
+    const issue = el.dataset.issue;
+    if (selectedIssues.includes(issue)) {
+      selectedIssues = selectedIssues.filter(i => i !== issue);
+    } else {
+      selectedIssues.push(issue);
+    }
+  }
+
+  function updateCharCount(el) {
+    document.getElementById('charCount').textContent = el.value.length;
+    validateForm();
+  }
+
+  function validateForm() {
+    const ok = selectedMood !== '' || selectedDiff !== '' || document.getElementById('feedbackText').value.trim().length > 10;
+    document.getElementById('submitBtn').disabled = !ok;
+  }
+
+  // ── PIPELINE ──
+  const delay = ms => new Promise(r => setTimeout(r, ms));
+  function psRun(n) {
+    document.getElementById('ps'+n).classList.add('running');
+    document.getElementById('pf'+n).classList.add('running');
+    document.getElementById('pst'+n).textContent = 'Running';
+    document.getElementById('pst'+n).className   = 'ps-stat running';
+  }
+  function psDone(n) {
+    document.getElementById('ps'+n).classList.replace('running','done');
+    document.getElementById('pf'+n).classList.replace('running','done');
+    document.getElementById('pst'+n).textContent = 'Done ✓';
+    document.getElementById('pst'+n).className   = 'ps-stat done';
+  }
+
+  // ── SUBMIT ──
+  async function submitFeedback() {
+    const freeText = document.getElementById('feedbackText').value.trim();
+
+    // Show overlay
+    document.getElementById('analyzingOverlay').classList.add('active');
+
+    // Populate overlay chips
+    const chips = document.getElementById('ao-chips');
+    chips.innerHTML = '';
+    const chipData = [profile.subject, selectedMood, selectedDiff, ...selectedIssues].filter(Boolean);
+    chipData.forEach((t, i) => {
+      const d = document.createElement('div');
+      d.className = 'fc';
+      d.style.animationDelay = (i * 0.1) + 's';
+      d.textContent = t;
+      chips.appendChild(d);
+    });
+
+    // Left profile
+    document.getElementById('ao-profile').innerHTML =
+      `Subject<br/><strong style="color:var(--ink)">${profile.subject}</strong><br/><br/>` +
+      `Mood<br/><strong style="color:var(--ink)">${selectedMood || 'not selected'}</strong><br/><br/>` +
+      `Test Score<br/><strong style="color:var(--ink)">${testResult.pct !== undefined ? testResult.pct + '%' : '—'}</strong>`;
+
+    psRun(1); await delay(500); psDone(1);
+    psRun(2); await delay(400);
+
+    // ── GEMINI CALL ──
+    const prompt = `
+You are an empathetic AI tutor for Class 10 CBSE students.
+
+A student just completed an assessment test and is giving feedback. Analyze their emotional state and adjust their learning recommendations.
+
+Student Profile:
+- Subject: ${profile.subject}
+- Topics: ${profile.topics.join(', ')}
+- Performance: ${profile.performance}
+- Goal: ${profile.goal}
+- Test Score: ${testResult.pct !== undefined ? testResult.pct + '%' : 'unknown'} (${testResult.score}/${testResult.total})
+
+Student Feedback:
+- Selected Mood: ${selectedMood || 'not selected'}
+- Test Difficulty Felt: ${selectedDiff || 'not mentioned'}
+- Specific Issues: ${selectedIssues.length > 0 ? selectedIssues.join(', ') : 'none selected'}
+- Free Text: "${freeText || 'no text provided'}"
+
+Return ONLY valid JSON, no markdown:
+{
+  "sentiment": {
+    "detected_mood": "frustrated | confused | neutral | satisfied | motivated",
+    "intensity": "mild | moderate | strong",
+    "mood_emoji": "single emoji representing mood",
+    "mood_color": "hex color code matching mood (red for frustrated, yellow for confused, green for satisfied, purple for motivated, gray for neutral)",
+    "ai_observation": "1 sentence about what the AI noticed from the feedback",
+    "action_taken": "1 sentence describing exactly what the AI is changing in the plan"
+  },
+  "empathy_response": "warm 2-3 sentence empathetic message addressing the student directly. Acknowledge their feeling by name, normalize it, then encourage them. Reference their specific subject.",
+  "adjustments": ["short phrase describing change 1", "short phrase describing change 2", "short phrase describing change 3"],
+  "adjusted_courses": [
+    {
+      "topic": "topic name",
+      "title": "adjusted course title reflecting the feedback",
+      "description": "2 sentences explaining what changed and why this suits the student better now",
+      "difficulty": "Beginner | Medium | Advanced",
+      "weeks": 3,
+      "format": "Video Series | Practice Problems | Mixed | Notes",
+      "priority": "High | Medium | Low",
+      "why_changed": "1 sentence — what specifically changed from the original recommendation",
+      "resource_url": "https://www.youtube.com/results?search_query=CBSE+Class+10+${encodeURIComponent(profile.topics[0] || 'Mathematics')}",
+      "resource_name": "specific resource name"
+    }
+  ],
+  "next_step_message": "2 sentences telling the student exactly what to do next based on their feedback and adjusted plan.",
+  "session_summary": "one line summary for session log — mood detected, key change made"
+}`;
+
+    let aiData = null;
+    try {
+      const res  = await fetch(GEMINI_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 2500 }
+        })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      const text  = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const clean = text.replace(/```json|```/g, '').trim();
+      aiData = JSON.parse(clean);
+    } catch(err) {
+      document.getElementById('analyzingOverlay').classList.remove('active');
+      alert('⚠ API Error: ' + err.message);
+      return;
+    }
+
+    psDone(2);
+
+    // Show sentiment on overlay
+    const sent = aiData.sentiment || {};
+    const sentCard = document.getElementById('ao-sentiment');
+    sentCard.style.display = 'flex';
+    document.getElementById('ao-sent-bar').style.background = sent.mood_color || '#8A7F72';
+    document.getElementById('ao-sent-mood').textContent = (sent.detected_mood || '').toUpperCase();
+    document.getElementById('ao-sent-text').textContent = sent.ai_observation || '';
+
+    psRun(3); await delay(600); psDone(3);
+    psRun(4); await delay(400); psDone(4);
+    await delay(700);
+
+    // Hide overlay, show results
+    document.getElementById('analyzingOverlay').classList.remove('active');
+    renderResults(aiData);
+  }
+
+  // ── RENDER RESULTS ──
+  function renderResults(data) {
+    document.getElementById('formSection').style.display    = 'none';
+    document.getElementById('resultsSection').classList.add('active');
+    document.getElementById('progressFill').style.width     = '100%';
+
+    const sent    = data.sentiment || {};
+    const courses = data.adjusted_courses || [];
+
+    // Hero
+    document.getElementById('empathy-text').textContent = data.empathy_response || '—';
+
+    // Sentiment card
+    const moodEmojis = { frustrated:'😤', confused:'😕', neutral:'😐', satisfied:'😊', motivated:'🔥' };
+    document.getElementById('sr-emoji').textContent     = sent.mood_emoji || moodEmojis[sent.detected_mood] || '💬';
+    document.getElementById('sr-mood').textContent      = (sent.detected_mood || '—').charAt(0).toUpperCase() + (sent.detected_mood || '').slice(1);
+    document.getElementById('sr-intensity').textContent = (sent.intensity || '') + ' intensity';
+    document.getElementById('sr-action').textContent    = sent.action_taken || '—';
+
+    // Adjustment tags
+    const adjTags = document.getElementById('adj-tags');
+    adjTags.innerHTML = '';
+    (data.adjustments || []).forEach(a => {
+      adjTags.innerHTML += `<div style="padding:6px 14px; border:1px solid var(--line); font-size:10px; font-family:'Syne Mono',monospace; color:var(--ink-mid); position:relative; overflow:hidden;">
+        <span style="position:absolute;left:0;top:0;width:3px;height:100%;background:var(--accent);"></span>${a}
+      </div>`;
+    });
+
+    // Adjusted courses
+    const coursesEl = document.getElementById('adj-courses');
+    coursesEl.innerHTML = '';
+    courses.forEach((c, i) => {
+      const priClass = c.priority === 'High' ? 'priority-high' : c.priority === 'Medium' ? 'priority-medium' : 'priority-low';
+      coursesEl.innerHTML += `
+        <div class="adj-card">
+          <div class="ac-left">
+            <div class="ac-num">0${i+1}</div>
+            <span class="ac-priority ${priClass}">${c.priority || 'Medium'}</span>
+          </div>
+          <div class="ac-main">
+            <div class="ac-title">${c.title}</div>
+            <div class="ac-desc">${c.description}</div>
+            <div class="ac-why-changed">↻ ${c.why_changed}</div>
+          </div>
+          <div class="ac-right">
+            <div class="ac-weeks">${c.weeks} weeks · ${c.format}</div>
+            <a href="${c.resource_url}" target="_blank" class="ac-link">${c.resource_name || 'Open →'}</a>
+          </div>
+        </div>`;
+    });
+
+    document.getElementById('adj-count').textContent = courses.length + ' courses updated';
+
+    // Next step
+    document.getElementById('next-step-text').textContent = data.next_step_message || '';
+
+    // Session log
+    const sessionId = 'PS-' + Date.now().toString(36).toUpperCase();
+    const now = new Date().toLocaleString('en-IN', { dateStyle:'short', timeStyle:'short' });
+    document.getElementById('sl-text').textContent  = `${now} · ${data.session_summary || 'Feedback processed'}`;
+    document.getElementById('sl-id').textContent    = sessionId;
+
+    // Save session to sessionStorage
+    const sessions = JSON.parse(sessionStorage.getItem('pathwise_sessions') || '[]');
+    sessions.push({
+      id: sessionId, time: now,
+      subject: profile.subject, mood: sent.detected_mood,
+      score: testResult.pct, summary: data.session_summary,
+    });
+    sessionStorage.setItem('pathwise_sessions', JSON.stringify(sessions));
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── GO TO TEST ──
+  function goToTest() {
+    const p = new URLSearchParams({
+      subject: profile.subject,
+      topics:  profile.topics.join(','),
+      perf:    profile.performance,
+      goal:    profile.goal,
+    });
+    window.location.href = 'test.html?' + p.toString();
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pathwise — Progress Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Syne+Mono&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link rel="icon" type="image/x-png" href="./Logo.png">
+<style>
+  :root {
+    --cream: #F0EBE1;
+    --cream-dark: #E8E1D6;
+    --ink: #1A1612;
+    --ink-mid: #3A3128;
+    --ink-mute: #8A7F72;
+    --ink-faint: #C4BAB0;
+    --accent: #E84B1A;
+    --line: rgba(26,22,18,0.12);
+    --grid: rgba(26,22,18,0.06);
+    --success: #16A34A;
+    --success-bg: rgba(22,163,74,0.05);
+    --warn: #CA8A04;
+    --warn-bg: rgba(202,138,4,0.06);
+    --danger: #DC2626;
+    --danger-bg: rgba(220,38,38,0.06);
+  }
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  html { scroll-behavior:smooth; }
+  body { background:var(--cream); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh; }
+
+  .grid-overlay { position:fixed; inset:0; pointer-events:none; z-index:0; display:grid; grid-template-columns:1fr 1fr 1fr 1fr; }
+  .grid-col { border-right:1px solid var(--grid); }
+  .grid-col:last-child { border-right:none; }
+
+  /* ── NAV ── */
+  nav {
+    position:sticky; top:0; z-index:100;
+    display:grid; grid-template-columns:1fr 1fr 1fr 1fr;
+    border-bottom:1px solid var(--line); background:var(--cream); height:52px;
+  }
+  .nav-logo { grid-column:1; display:flex; align-items:center; padding:0 28px; font-family:'Syne',sans-serif; font-weight:800; font-size:15px; border-right:1px solid var(--line); gap:10px; }
+  .nav-logo-dot { width:7px; height:7px; border-radius:50%; background:var(--accent); animation:pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.7)} }
+  .nav-mid { grid-column:2/4; display:flex; align-items:center; justify-content:center; gap:28px; border-right:1px solid var(--line); }
+  .nav-tab { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); cursor:pointer; height:52px; display:flex; align-items:center; border-bottom:2px solid transparent; transition:all .2s; padding:0 4px; }
+  .nav-tab:hover { color:var(--ink); }
+  .nav-tab.active { color:var(--ink); border-bottom-color:var(--accent); }
+  .nav-right { grid-column:4; display:flex; align-items:center; justify-content:flex-end; padding:0 28px; gap:12px; }
+  .nav-cert-btn { padding:8px 16px; background:var(--accent); color:#fff; border:none; font-family:'Syne',sans-serif; font-size:9px; font-weight:700; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:background .2s; display:none; }
+  .nav-cert-btn.visible { display:block; }
+  .nav-cert-btn:hover { background:#c03a10; }
+  .nav-back { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); background:none; border:none; cursor:pointer; }
+  .nav-back:hover { color:var(--ink); }
+
+  /* Progress strip */
+  .progress-strip { height:3px; background:var(--line); }
+  .progress-fill { height:100%; background:var(--accent); transition:width 1s ease; }
+
+  main { position:relative; z-index:1; padding-bottom:80px; }
+
+  /* ══════════ HERO ══════════ */
+  .hero { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-bottom:1px solid var(--line); }
+  .hero-left { grid-column:1/3; padding:52px 28px; border-right:1px solid var(--line); }
+  .hero-eyebrow { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:14px; }
+  .hero-title { font-family:'Syne',sans-serif; font-size:clamp(40px,5.5vw,68px); font-weight:800; letter-spacing:-2.5px; line-height:0.92; margin-bottom:16px; }
+  .hero-title .acc { color:var(--accent); }
+  .hero-sub { font-size:12px; color:var(--ink-mute); line-height:1.9; max-width:360px; font-weight:300; }
+  .hero-right { grid-column:3/5; display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); align-content:start; }
+  .hstat { background:var(--cream); padding:22px 24px; }
+  .hstat-label { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:6px; }
+  .hstat-val { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; }
+  .hstat-val.green { color:var(--success); }
+  .hstat-val.orange { color:var(--warn); }
+  .hstat-val.red { color:var(--danger); }
+  .hstat-val.accent { color:var(--accent); }
+
+  /* ══════════ SECTION HEADER ══════════ */
+  .sec-header { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-bottom:1px solid var(--line); height:52px; }
+  .sh-title { grid-column:1/3; padding:0 28px; display:flex; align-items:center; font-family:'Syne',sans-serif; font-size:11px; font-weight:700; letter-spacing:4px; text-transform:uppercase; border-right:1px solid var(--line); }
+  .sh-right { padding:0 28px; display:flex; align-items:center; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--ink-mute); border-right:1px solid var(--line); }
+  .sh-right:last-child { border-right:none; }
+  .sh-right.accent { color:var(--accent); }
+
+  /* ══════════ OVERALL PROGRESS BAR ══════════ */
+  .overall-row { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-bottom:1px solid var(--line); min-height:80px; }
+  .or-left { grid-column:1; padding:20px 28px; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:center; gap:4px; }
+  .or-label { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); }
+  .or-val   { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; }
+  .or-bar-cell { grid-column:2/4; padding:20px 28px; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:center; gap:8px; }
+  .big-bar { height:8px; background:var(--line); border-radius:0; overflow:hidden; }
+  .big-bar-fill { height:100%; background:var(--accent); border-radius:0; transition:width 1.2s ease; }
+  .big-bar-fill.green { background:var(--success); }
+  .or-milestone { font-size:10px; color:var(--ink-mute); font-family:'Syne Mono',monospace; }
+  .or-right { grid-column:4; padding:20px 28px; display:flex; align-items:center; justify-content:flex-end; }
+  .badge-earned { padding:6px 14px; font-size:9px; letter-spacing:2px; text-transform:uppercase; font-family:'Syne Mono',monospace; }
+  .badge-on-track { background:var(--success-bg); color:var(--success); border:1px solid var(--success); }
+  .badge-in-progress { background:var(--warn-bg); color:var(--warn); border:1px solid var(--warn); }
+  .badge-not-started { border:1px solid var(--line); color:var(--ink-faint); }
+
+  /* ══════════ TOPIC TABLE ══════════ */
+  .topic-table-row { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-bottom:1px solid var(--line); min-height:72px; transition:background .2s; }
+  .topic-table-row:hover { background:var(--cream-dark); }
+  .ttr-name { grid-column:1; padding:18px 28px; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:center; gap:4px; }
+  .ttr-topic { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; }
+  .ttr-sub   { font-size:10px; color:var(--ink-mute); font-family:'Syne Mono',monospace; letter-spacing:1px; }
+  .ttr-bar-cell { grid-column:2/4; padding:18px 28px; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:center; gap:6px; }
+  .topic-bar { height:4px; background:var(--line); }
+  .topic-bar-fill { height:100%; transition:width 1s ease; border-radius:0; }
+  .ttr-score-row { display:flex; justify-content:space-between; font-size:10px; color:var(--ink-mute); font-family:'Syne Mono',monospace; }
+  .ttr-actions { grid-column:4; padding:18px 28px; display:flex; align-items:center; justify-content:flex-end; gap:8px; }
+  .action-btn { font-size:9px; letter-spacing:2px; text-transform:uppercase; padding:7px 14px; cursor:pointer; transition:all .2s; border:none; font-family:'Syne',sans-serif; }
+  .btn-review { background:transparent; color:var(--ink-mute); border:1px solid var(--line); }
+  .btn-review:hover { border-color:var(--ink); color:var(--ink); }
+  .btn-retake { background:var(--ink); color:#fff; }
+  .btn-retake:hover { background:var(--accent); }
+  .btn-done { background:var(--success-bg); color:var(--success); border:1px solid var(--success); cursor:default; }
+
+  /* ══════════ ASSIGNMENTS ══════════ */
+  .assignment-row { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-bottom:1px solid var(--line); min-height:80px; transition:background .2s; }
+  .assignment-row:hover { background:var(--cream-dark); }
+  .asr-num { grid-column:1; padding:22px 28px; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:center; gap:6px; }
+  .asr-n { font-family:'Syne Mono',monospace; font-size:10px; color:var(--ink-faint); letter-spacing:2px; }
+  .asr-status-dot { width:8px; height:8px; border-radius:50%; }
+  .dot-done { background:var(--success); }
+  .dot-active { background:var(--accent); animation:pulse 1.5s ease-in-out infinite; }
+  .dot-locked { background:var(--ink-faint); }
+  .asr-main { grid-column:2/4; padding:22px 28px; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:center; gap:5px; }
+  .asr-title { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; }
+  .asr-desc  { font-size:11px; color:var(--ink-mute); line-height:1.6; }
+  .asr-due   { font-size:10px; font-family:'Syne Mono',monospace; color:var(--ink-faint); margin-top:2px; }
+  .asr-right { grid-column:4; padding:22px 28px; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:8px; }
+  .asr-points { font-family:'Syne Mono',monospace; font-size:11px; color:var(--ink-mute); }
+  .asr-btn { font-size:9px; letter-spacing:2px; text-transform:uppercase; padding:8px 16px; cursor:pointer; border:none; font-family:'Syne',sans-serif; transition:all .2s; }
+  .asr-btn-start { background:var(--accent); color:#fff; }
+  .asr-btn-start:hover { background:#c03a10; }
+  .asr-btn-done  { background:var(--success-bg); color:var(--success); border:1px solid var(--success); cursor:default; }
+  .asr-btn-locked { background:transparent; color:var(--ink-faint); border:1px solid var(--line); cursor:not-allowed; }
+
+  /* ══════════ SESSIONS LOG ══════════ */
+  .session-row { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-bottom:1px solid var(--line); min-height:60px; transition:background .2s; }
+  .session-row:hover { background:var(--cream-dark); }
+  .sr-id   { grid-column:1; padding:14px 28px; border-right:1px solid var(--line); display:flex; align-items:center; }
+  .sr-id-val { font-family:'Syne Mono',monospace; font-size:11px; color:var(--accent); }
+  .sr-info { grid-column:2/4; padding:14px 28px; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:center; gap:3px; }
+  .sr-summary { font-size:12px; color:var(--ink-mid); }
+  .sr-time    { font-size:10px; color:var(--ink-faint); font-family:'Syne Mono',monospace; }
+  .sr-score { grid-column:4; padding:14px 28px; display:flex; align-items:center; justify-content:flex-end; }
+  .sr-score-val { font-family:'Syne',sans-serif; font-size:14px; font-weight:800; }
+
+  /* ══════════ CERTIFICATE ══════════ */
+  .cert-section { display:none; border-top:1px solid var(--line); }
+  .cert-section.unlocked { display:block; }
+  .cert-wrapper { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; }
+  .cert-left { grid-column:1; padding:40px 28px; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:center; gap:12px; }
+  .cert-eyebrow { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--success); }
+  .cert-title { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; letter-spacing:-0.5px; line-height:1.1; }
+  .cert-desc { font-size:12px; color:var(--ink-mute); line-height:1.8; }
+  .cert-main { grid-column:2/5; padding:40px; display:flex; align-items:center; justify-content:center; }
+
+  /* The actual certificate */
+  .certificate {
+    border:2px solid var(--ink); padding:48px 52px; max-width:580px; width:100%;
+    position:relative; text-align:center;
+    box-shadow: 4px 4px 0 var(--ink);
+  }
+  .cert-corner { position:absolute; width:24px; height:24px; border-color:var(--accent); border-style:solid; }
+  .cert-corner.tl { top:10px; left:10px; border-width:2px 0 0 2px; }
+  .cert-corner.tr { top:10px; right:10px; border-width:2px 2px 0 0; }
+  .cert-corner.bl { bottom:10px; left:10px; border-width:0 0 2px 2px; }
+  .cert-corner.br { bottom:10px; right:10px; border-width:0 2px 2px 0; }
+  .cert-platform { font-size:9px; letter-spacing:5px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:14px; font-family:'Syne Mono',monospace; }
+  .cert-headline { font-family:'Syne',sans-serif; font-size:11px; font-weight:600; letter-spacing:4px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:8px; }
+  .cert-student-name { font-family:'Syne',sans-serif; font-size:34px; font-weight:800; letter-spacing:-1px; margin-bottom:8px; color:var(--ink); }
+  .cert-achievement { font-size:12px; color:var(--ink-mute); line-height:1.8; margin-bottom:20px; max-width:360px; margin-left:auto; margin-right:auto; }
+  .cert-subject-badge { display:inline-block; padding:8px 24px; background:var(--ink); color:#fff; font-family:'Syne',sans-serif; font-size:11px; font-weight:700; letter-spacing:4px; text-transform:uppercase; margin-bottom:24px; }
+  .cert-divider { height:1px; background:var(--line); margin:20px 0; }
+  .cert-meta-row { display:flex; justify-content:space-between; align-items:center; }
+  .cert-meta { text-align:left; }
+  .cert-meta-label { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-faint); margin-bottom:3px; font-family:'Syne Mono',monospace; }
+  .cert-meta-val { font-family:'Syne',sans-serif; font-size:12px; font-weight:700; }
+  .cert-seal { width:52px; height:52px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; }
+  .cert-seal-inner { font-size:22px; }
+  .cert-download-btn { margin-top:24px; padding:12px 28px; background:var(--ink); color:#fff; border:none; font-family:'Syne',sans-serif; font-size:10px; font-weight:700; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:background .2s; }
+  .cert-download-btn:hover { background:var(--accent); }
+
+  /* ══════════ LOCKED CERT ══════════ */
+  .cert-locked { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-top:1px solid var(--line); background:var(--cream-dark); }
+  .cert-locked-left { grid-column:1/3; padding:36px 28px; border-right:1px solid var(--line); display:flex; align-items:center; gap:20px; }
+  .lock-icon { width:44px; height:44px; border:1.5px solid var(--ink-faint); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; color:var(--ink-faint); }
+  .cert-locked-text { flex:1; }
+  .clt-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:800; color:var(--ink-mute); margin-bottom:4px; }
+  .clt-desc  { font-size:11px; color:var(--ink-faint); line-height:1.7; }
+  .cert-locked-right { grid-column:3/5; padding:36px 28px; display:flex; flex-direction:column; justify-content:center; gap:10px; }
+  .unlock-progress-label { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:6px; }
+  .unlock-bar { height:6px; background:var(--line); }
+  .unlock-bar-fill { height:100%; background:var(--accent); transition:width 1s ease; }
+  .unlock-note { font-size:11px; color:var(--ink-mute); font-family:'Syne Mono',monospace; }
+
+  /* ══════════ EMPTY STATE ══════════ */
+  .empty-state { padding:60px 28px; text-align:center; }
+  .es-title { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; margin-bottom:8px; }
+  .es-desc  { font-size:12px; color:var(--ink-mute); margin-bottom:20px; }
+  .es-btn   { padding:12px 28px; background:var(--ink); color:#fff; border:none; font-family:'Syne',sans-serif; font-size:10px; font-weight:700; letter-spacing:3px; text-transform:uppercase; cursor:pointer; }
+
+  /* TABS */
+  .section { display:none; }
+  .section.active { display:block; }
+
+  /* REVEAL */
+  .reveal { opacity:0; transform:translateY(12px); transition:opacity .5s, transform .5s; }
+  .reveal.visible { opacity:1; transform:translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="grid-overlay">
+  <div class="grid-col"></div><div class="grid-col"></div>
+  <div class="grid-col"></div><div class="grid-col"></div>
+</div>
+
+<nav>
+  <div class="nav-logo"><div class="nav-logo-dot"></div>PATHWISE</div>
+  <div class="nav-mid">
+    <span class="nav-tab active" onclick="switchTab('overview')">Overview</span>
+    <span class="nav-tab" onclick="switchTab('topics')">Topics</span>
+    <span class="nav-tab" onclick="switchTab('assignments')">Assignments</span>
+    <span class="nav-tab" onclick="switchTab('sessions')">Session Log</span>
+  </div>
+  <div class="nav-right">
+    <button class="nav-cert-btn" id="certNavBtn" onclick="showCert()">🎓 Certificate</button>
+    <button class="nav-back" onclick="window.location.href='results.html'">← Plan</button>
+  </div>
+</nav>
+<div class="progress-strip"><div class="progress-fill" id="topProgressFill" style="width:0%"></div></div>
+
+<main>
+
+  <!-- ══════ TAB: OVERVIEW ══════ -->
+  <div class="section active" id="tab-overview">
+
+    <!-- Hero -->
+    <div class="hero reveal">
+      <div class="hero-left">
+        <div class="hero-eyebrow" id="heroEyebrow">Learning Progress · Class 10 CBSE</div>
+        <h1 class="hero-title">Your<br/>learning<br/><span class="acc" id="heroSubject">journey.</span></h1>
+        <p class="hero-sub" id="heroSub">Track your improvement across all topics, complete assignments, and unlock your certificate when you hit 80%.</p>
+      </div>
+      <div class="hero-right">
+        <div class="hstat"><div class="hstat-label">Overall Score</div><div class="hstat-val accent" id="stat-overall">—</div></div>
+        <div class="hstat"><div class="hstat-label">Topics Covered</div><div class="hstat-val" id="stat-topics">—</div></div>
+        <div class="hstat"><div class="hstat-label">Assignments</div><div class="hstat-val green" id="stat-assignments">—</div></div>
+        <div class="hstat"><div class="hstat-label">Certificate</div><div class="hstat-val" id="stat-cert">Locked 🔒</div></div>
+      </div>
+    </div>
+
+    <!-- Overall progress bars -->
+    <div class="sec-header reveal">
+      <div class="sh-title">Overall Progress</div>
+      <div class="sh-right">Target: 80% for certificate</div>
+      <div class="sh-right accent" id="overallStatusLabel">In Progress</div>
+    </div>
+
+    <div id="overallBars"></div>
+
+    <!-- Certificate section -->
+    <div class="cert-section" id="certSection">
+      <div class="cert-wrapper">
+        <div class="cert-left">
+          <div class="cert-eyebrow">🎓 Unlocked</div>
+          <div class="cert-title">Certificate of Completion</div>
+          <div class="cert-desc">You've scored 80% or above. Download your certificate and share it with your teachers or parents.</div>
+        </div>
+        <div class="cert-main">
+          <div style="width:100%;">
+            <div class="certificate" id="certificateEl">
+              <div class="cert-corner tl"></div>
+              <div class="cert-corner tr"></div>
+              <div class="cert-corner bl"></div>
+              <div class="cert-corner br"></div>
+              <div class="cert-platform">Pathwise · AI Learning Platform</div>
+              <div class="cert-headline">This certifies that</div>
+              <div class="cert-student-name" id="certName">Student</div>
+              <div class="cert-achievement" id="certAchievement">has successfully completed the personalized learning program and demonstrated proficiency in the assessed topics.</div>
+              <div class="cert-subject-badge" id="certSubject">Subject</div>
+              <div class="cert-divider"></div>
+              <div class="cert-meta-row">
+                <div class="cert-meta">
+                  <div class="cert-meta-label">Score Achieved</div>
+                  <div class="cert-meta-val" id="certScore">—</div>
+                </div>
+                <div class="cert-seal"><div class="cert-seal-inner">✓</div></div>
+                <div class="cert-meta">
+                  <div class="cert-meta-label">Date Issued</div>
+                  <div class="cert-meta-val" id="certDate">—</div>
+                </div>
+              </div>
+            </div>
+            <button class="cert-download-btn" onclick="downloadCert()">Download Certificate →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Locked certificate -->
+    <div class="cert-locked" id="certLocked">
+      <div class="cert-locked-left">
+        <div class="lock-icon">🔒</div>
+        <div class="cert-locked-text">
+          <div class="clt-title">Certificate Locked</div>
+          <div class="clt-desc">Complete the assessment test with 80% or above to unlock your certificate of completion.</div>
+        </div>
+      </div>
+      <div class="cert-locked-right">
+        <div class="unlock-progress-label">Progress towards certificate</div>
+        <div class="unlock-bar"><div class="unlock-bar-fill" id="unlockBarFill" style="width:0%"></div></div>
+        <div class="unlock-note" id="unlockNote">Score 80% on the assessment test to unlock</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════ TAB: TOPICS ══════ -->
+  <div class="section" id="tab-topics">
+    <div class="sec-header">
+      <div class="sh-title">Topic Performance</div>
+      <div class="sh-right" id="topicsSubLabel">All Topics</div>
+      <div class="sh-right accent" id="topicsCount">—</div>
+    </div>
+    <div id="topicsTable"></div>
+  </div>
+
+  <!-- ══════ TAB: ASSIGNMENTS ══════ -->
+  <div class="section" id="tab-assignments">
+    <div class="sec-header">
+      <div class="sh-title">Assignments</div>
+      <div class="sh-right" id="assignComplete">0 Complete</div>
+      <div class="sh-right accent" id="assignTotal">— Total</div>
+    </div>
+    <div id="assignmentsTable"></div>
+  </div>
+
+  <!-- ══════ TAB: SESSION LOG ══════ -->
+  <div class="section" id="tab-sessions">
+    <div class="sec-header">
+      <div class="sh-title">Session Log</div>
+      <div class="sh-right" id="sessionCount">— sessions</div>
+      <div class="sh-right accent">All Activity</div>
+    </div>
+    <div id="sessionLogTable"></div>
+  </div>
+
+</main>
+
+<script>
+  // ── READ DATA ──
+  const profile    = JSON.parse(sessionStorage.getItem('pathwise_profile')    || '{}');
+  const result     = JSON.parse(sessionStorage.getItem('pathwise_result')     || '{}');
+  const testResult = JSON.parse(sessionStorage.getItem('pathwise_test_result')|| '{}');
+  const sessions   = JSON.parse(sessionStorage.getItem('pathwise_sessions')   || '[]');
+
+  const subject    = profile.subject    || 'Mathematics';
+  const topics     = profile.topics     || ['Algebra', 'Trigonometry'];
+  const goal       = profile.goal       || 'Board Exam';
+  const courses    = (result.courses)   || [];
+  const wa         = result.weakness_analysis || {};
+  const topicBreak = testResult.topicBreakdown || {};
+  const testScore  = testResult.pct     || 0;
+  const totalWeeks = courses.reduce((s,c) => s + (c.weeks||2), 0);
+
+  // ── INIT ──
+  window.onload = () => {
+    renderHero();
+    renderOverallBars();
+    renderTopics();
+    renderAssignments();
+    renderSessions();
+    checkCertificate();
+
+    // Scroll reveal
+    const obs = new IntersectionObserver(entries =>
+      entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); }),
+      { threshold:0.08 }
+    );
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+    // Animate progress fill after load
+    setTimeout(() => {
+      document.getElementById('topProgressFill').style.width = Math.min(testScore, 100) + '%';
+    }, 300);
+  };
+
+  // ── TAB ──
+  function switchTab(name) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.target.classList.add('active');
+    window.scrollTo({ top: 0, behavior:'smooth' });
+  }
+
+  // ── HERO ──
+  function renderHero() {
+    document.getElementById('heroEyebrow').textContent  = `Learning Progress · ${subject}`;
+    document.getElementById('heroSubject').textContent  = subject.toLowerCase() + '.';
+    document.getElementById('heroSub').textContent      = `Tracking your improvement across ${topics.length} weak topic${topics.length !== 1 ? 's' : ''} toward your goal: ${goal}.`;
+
+    document.getElementById('stat-overall').textContent    = testScore ? testScore + '%' : 'No test yet';
+    document.getElementById('stat-topics').textContent     = topics.length + ' topics';
+    document.getElementById('stat-assignments').textContent = courses.length + ' tasks';
+
+    const scoreClass = testScore >= 80 ? 'green' : testScore >= 50 ? 'orange' : testScore ? 'red' : '';
+    document.getElementById('stat-overall').className = 'hstat-val ' + (scoreClass || 'accent');
+  }
+
+  // ── OVERALL BARS ──
+  function renderOverallBars() {
+    const container = document.getElementById('overallBars');
+    const statusLabel = document.getElementById('overallStatusLabel');
+
+    const rows = [
+      { label:'Test Score', val: testScore, milestone:'80% = Certificate', color: testScore >= 80 ? 'var(--success)' : testScore >= 50 ? 'var(--warn)' : 'var(--accent)' },
+      { label:'Topics Attempted', val: topics.length > 0 ? 100 : 0, milestone: topics.length + ' topics profiled', color:'var(--ink)' },
+      { label:'Resources Accessed', val: courses.length > 0 ? 40 : 0, milestone: courses.length + ' courses available', color:'var(--ink-mid)' },
+      { label:'Overall Completion', val: Math.round((testScore * 0.6) + (courses.length > 0 ? 20 : 0) + (sessions.length > 0 ? 20 : 0)), milestone: totalWeeks + ' week plan', color: 'var(--accent)' },
+    ];
+
+    const status = testScore >= 80 ? 'Eligible for Certificate ✓' : testScore > 0 ? 'In Progress' : 'Not Started';
+    statusLabel.textContent = status;
+    statusLabel.style.color = testScore >= 80 ? 'var(--success)' : 'var(--accent)';
+
+    container.innerHTML = '';
+    rows.forEach((r, i) => {
+      const badgeClass = r.val >= 80 ? 'badge-on-track' : r.val > 0 ? 'badge-in-progress' : 'badge-not-started';
+      const badgeText  = r.val >= 80 ? 'On Track ✓' : r.val > 0 ? 'In Progress' : 'Not Started';
+      container.innerHTML += `
+        <div class="overall-row reveal" style="animation-delay:${i*0.1}s">
+          <div class="or-left">
+            <div class="or-label">${r.label}</div>
+            <div class="or-val" style="color:${r.color}">${r.val}%</div>
+          </div>
+          <div class="or-bar-cell">
+            <div class="big-bar"><div class="big-bar-fill" style="width:0%;background:${r.color}" data-target="${r.val}"></div></div>
+            <div class="or-milestone">${r.milestone}</div>
+          </div>
+          <div class="or-right"><span class="badge-earned ${badgeClass}">${badgeText}</span></div>
+        </div>`;
+    });
+
+    // Animate bars
+    setTimeout(() => {
+      document.querySelectorAll('.big-bar-fill[data-target]').forEach(el => {
+        el.style.width = el.dataset.target + '%';
+      });
+    }, 400);
+  }
+
+  // ── TOPICS TABLE ──
+  function renderTopics() {
+    const container = document.getElementById('topicsTable');
+    document.getElementById('topicsSubLabel').textContent = subject;
+    document.getElementById('topicsCount').textContent    = topics.length + ' topics';
+    container.innerHTML = '';
+
+    if (topics.length === 0) {
+      container.innerHTML = `<div class="empty-state"><div class="es-title">No topics yet</div><div class="es-desc">Complete onboarding first.</div><button class="es-btn" onclick="window.location.href='onboarding.html'">Start Onboarding</button></div>`;
+      return;
+    }
+
+    topics.forEach((topic, i) => {
+      const tb   = topicBreak[topic] || {};
+      const pct  = tb.total ? Math.round((tb.correct / tb.total) * 100) : null;
+      const barColor = pct === null ? 'var(--ink-faint)' : pct >= 70 ? 'var(--success)' : pct >= 40 ? 'var(--warn)' : 'var(--danger)';
+      const barWidth = pct !== null ? pct : 0;
+      const statusText = pct === null ? 'Not tested' : pct >= 70 ? 'Mastered ✓' : pct >= 40 ? 'Improving' : 'Needs Work';
+      const actionBtn  = pct === null
+        ? `<button class="action-btn btn-retake" onclick="goToTest()">Take Test</button>`
+        : pct >= 80
+        ? `<span class="action-btn btn-done">Mastered ✓</span>`
+        : `<button class="action-btn btn-retake" onclick="goToTest()">Retake</button><button class="action-btn btn-review" onclick="window.location.href='results.html'">Resources</button>`;
+
+      container.innerHTML += `
+        <div class="topic-table-row">
+          <div class="ttr-name">
+            <div class="ttr-topic">${topic}</div>
+            <div class="ttr-sub">${subject} · Topic ${i+1}</div>
+          </div>
+          <div class="ttr-bar-cell">
+            <div class="topic-bar"><div class="topic-bar-fill" style="width:0%;background:${barColor}" data-target="${barWidth}"></div></div>
+            <div class="ttr-score-row">
+              <span>${pct !== null ? `${tb.correct}/${tb.total} correct` : 'No test data'}</span>
+              <span style="color:${barColor}">${statusText}</span>
+            </div>
+          </div>
+          <div class="ttr-actions">${actionBtn}</div>
+        </div>`;
+    });
+
+    setTimeout(() => {
+      document.querySelectorAll('.topic-bar-fill[data-target]').forEach(el => {
+        el.style.width = el.dataset.target + '%';
+      });
+    }, 300);
+  }
+
+  // ── ASSIGNMENTS ──
+  function renderAssignments() {
+    const container = document.getElementById('assignmentsTable');
+
+    // Build assignments from courses + fixed ones
+    const assignments = [
+      {
+        title: 'Complete Student Profile',
+        desc:  'Fill in your subject, weak topics, learning style and goal.',
+        points: 10, status: 'done',
+        due: 'Completed',
+      },
+      {
+        title: 'Review AI Analysis',
+        desc:  'Read through the weakness analysis and recommended approach on the Results page.',
+        points: 10, status: profile.subject ? 'done' : 'active',
+        due: profile.subject ? 'Completed' : 'Do now',
+      },
+      ...courses.slice(0,3).map((c, i) => ({
+        title: `Study: ${c.title || c.topic}`,
+        desc:  `Watch/read the free resources for ${c.topic}. Estimated ${c.weeks} weeks.`,
+        points: 20, status: i === 0 ? 'active' : 'locked',
+        due: `Week ${i+1}–${(i+1)+(c.weeks||2)-1}`,
+      })),
+      {
+        title: 'Take Assessment Test',
+        desc:  '10 AI-generated MCQs from your weak topics. Aim for 80%+.',
+        points: 30, status: testResult.score !== undefined ? 'done' : 'locked',
+        due: testResult.score !== undefined ? `Scored ${testScore}%` : 'After resources',
+      },
+      {
+        title: 'Submit Feedback',
+        desc:  'Tell the AI how you felt about the test. It adjusts your plan accordingly.',
+        points: 10, status: sessions.length > 0 ? 'done' : 'locked',
+        due: sessions.length > 0 ? 'Completed' : 'After test',
+      },
+    ];
+
+    const done  = assignments.filter(a => a.status === 'done').length;
+    const total = assignments.length;
+    document.getElementById('assignComplete').textContent = done + ' Complete';
+    document.getElementById('assignTotal').textContent    = total + ' Total';
+
+    container.innerHTML = '';
+    assignments.forEach((a, i) => {
+      const dotClass = a.status === 'done' ? 'dot-done' : a.status === 'active' ? 'dot-active' : 'dot-locked';
+      const btnHTML  = a.status === 'done'
+        ? `<span class="asr-btn asr-btn-done">Done ✓</span>`
+        : a.status === 'active'
+        ? `<button class="asr-btn asr-btn-start" onclick="assignAction(${i})">Start →</button>`
+        : `<button class="asr-btn asr-btn-locked" disabled>Locked 🔒</button>`;
+
+      container.innerHTML += `
+        <div class="assignment-row">
+          <div class="asr-num">
+            <div class="asr-n">TASK 0${i+1}</div>
+            <div class="asr-status-dot ${dotClass}"></div>
+          </div>
+          <div class="asr-main">
+            <div class="asr-title">${a.title}</div>
+            <div class="asr-desc">${a.desc}</div>
+            <div class="asr-due">${a.due}</div>
+          </div>
+          <div class="asr-right">
+            <div class="asr-points">+${a.points} pts</div>
+            ${btnHTML}
+          </div>
+        </div>`;
+    });
+
+    // Total points
+    const earned = assignments.filter(a => a.status === 'done').reduce((s,a) => s + a.points, 0);
+    const max    = assignments.reduce((s,a) => s + a.points, 0);
+    container.innerHTML += `
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; background:var(--ink); height:52px;">
+        <div style="grid-column:1/3; padding:0 28px; display:flex; align-items:center; border-right:1px solid rgba(255,255,255,0.1);">
+          <span style="font-size:9px; letter-spacing:4px; text-transform:uppercase; color:rgba(255,255,255,0.4);">Total Points Earned</span>
+        </div>
+        <div style="grid-column:3; padding:0 28px; display:flex; align-items:center; border-right:1px solid rgba(255,255,255,0.1);">
+          <span style="font-family:'Syne Mono',monospace; font-size:13px; color:var(--accent);">${earned} / ${max} pts</span>
+        </div>
+        <div style="grid-column:4; padding:0 28px; display:flex; align-items:center; justify-content:flex-end;">
+          <span style="font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,0.4);">${Math.round((earned/max)*100)}% complete</span>
+        </div>
+      </div>`;
+  }
+
+  // ── SESSION LOG ──
+  function renderSessions() {
+    const container = document.getElementById('sessionLogTable');
+    document.getElementById('sessionCount').textContent = sessions.length + ' session' + (sessions.length !== 1 ? 's' : '');
+
+    // Always show at least the current session
+    const allSessions = [
+      {
+        id: 'PS-' + Date.now().toString(36).slice(-6).toUpperCase(),
+        time: new Date().toLocaleString('en-IN', { dateStyle:'short', timeStyle:'short' }),
+        subject: subject,
+        mood: 'session started',
+        score: testScore || null,
+        summary: testScore ? `Test completed · ${testScore}% score · ${subject}` : `Profile created · ${subject} · ${topics.join(', ')}`,
+      },
+      ...sessions,
+    ].reverse();
+
+    if (allSessions.length === 0) {
+      container.innerHTML = `<div class="empty-state"><div class="es-title">No sessions yet</div><div class="es-desc">Complete the full flow to see your session history here.</div></div>`;
+      return;
+    }
+
+    container.innerHTML = '';
+    allSessions.forEach(s => {
+      const scoreColor = s.score >= 80 ? 'var(--success)' : s.score >= 50 ? 'var(--warn)' : s.score ? 'var(--danger)' : 'var(--ink-faint)';
+      container.innerHTML += `
+        <div class="session-row">
+          <div class="sr-id"><span class="sr-id-val">${s.id || '—'}</span></div>
+          <div class="sr-info">
+            <div class="sr-summary">${s.summary || s.subject + ' session'}</div>
+            <div class="sr-time">${s.time || '—'} · ${s.mood ? 'Mood: ' + s.mood : ''}</div>
+          </div>
+          <div class="sr-score">
+            <span class="sr-score-val" style="color:${scoreColor}">${s.score != null ? s.score + '%' : '—'}</span>
+          </div>
+        </div>`;
+    });
+  }
+
+  // ── CERTIFICATE ──
+  function checkCertificate() {
+    const certSection  = document.getElementById('certSection');
+    const certLocked   = document.getElementById('certLocked');
+    const certNavBtn   = document.getElementById('certNavBtn');
+    const unlockFill   = document.getElementById('unlockBarFill');
+    const unlockNote   = document.getElementById('unlockNote');
+
+    unlockFill.style.width = Math.min(testScore, 100) + '%';
+    unlockNote.textContent = testScore >= 80
+      ? '🎓 Certificate unlocked!'
+      : `${testScore || 0}% / 80% — ${80 - (testScore||0)} more points needed`;
+
+    if (testScore >= 80) {
+      certSection.classList.add('unlocked');
+      certLocked.style.display = 'none';
+      certNavBtn.classList.add('visible');
+      document.getElementById('stat-cert').textContent = 'Unlocked 🎓';
+      document.getElementById('stat-cert').style.color = 'var(--success)';
+      populateCert();
+    }
+  }
+
+  function populateCert() {
+    const now = new Date().toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' });
+    document.getElementById('certName').textContent        = profile.name || 'Student';
+    document.getElementById('certSubject').textContent     = subject;
+    document.getElementById('certScore').textContent       = testScore + '%';
+    document.getElementById('certDate').textContent        = now;
+    document.getElementById('certAchievement').textContent =
+      `has successfully completed the AI-powered personalized learning program for ${subject} (Class 10 CBSE), demonstrating proficiency in ${topics.join(', ')}.`;
+  }
+
+  function showCert() {
+    switchTab('overview');
+    setTimeout(() => {
+      document.getElementById('certSection').scrollIntoView({ behavior:'smooth' });
+    }, 100);
+  }
+
+  function downloadCert() {
+    // Print the certificate div as PDF via browser print
+    const certEl = document.getElementById('certificateEl');
+    const w = window.open('', '_blank');
+    w.document.write(`<!DOCTYPE html><html><head><title>Pathwise Certificate</title>
+      <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Syne+Mono&display=swap" rel="stylesheet"/>
+      <style>
+        body { background:#F0EBE1; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; font-family:'Syne',sans-serif; }
+        @media print { body { background:white; } }
+      </style></head><body>
+      ${certEl.outerHTML}
+      <script>window.onload=()=>{window.print();}<\/script>
+      </body></html>`);
+    w.document.close();
+  }
+
+  // ── ASSIGNMENT ACTIONS ──
+  function assignAction(idx) {
+    const actions = ['onboarding.html', 'results.html', 'results.html', 'results.html', 'test.html', 'feedback.html'];
+    if (actions[idx]) window.location.href = actions[idx];
+  }
+
+  function goToTest() {
+    const p = new URLSearchParams({
+      subject: subject,
+      topics:  topics.join(','),
+      perf:    profile.performance || '',
+      goal:    goal,
+    });
+    window.location.href = 'test.html?' + p.toString();
+  }
+</script>
+</body>
+</html>
