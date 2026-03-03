@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pathwise — Begin Assessment</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Syne+Mono&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="icon" type="image/x-png" href="./Logo.png">
+<style>
+  :root {
+    --cream: #F0EBE1;
+    --cream-dark: #E8E1D6;
+    --cream-hover: #EAE3D8;
+    --ink: #1A1612;
+    --ink-mid: #3A3128;
+    --ink-mute: #8A7F72;
+    --ink-faint: #C4BAB0;
+    --accent: #E84B1A;
+    --accent2: #FF6B35;
+    --accent-bg: rgba(232,75,26,0.06);
+    --grid: rgba(26,22,18,0.07);
+    --line: rgba(26,22,18,0.12);
+    --line-strong: rgba(26,22,18,0.2);
+    --success: #16A34A;
+    --subject-color: #E84B1A;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* GRID */
+  .grid-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 0; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .grid-col { border-right: 1px solid var(--grid); }
+  .grid-col:last-child { border-right: none; }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;
+    border-bottom: 1px solid var(--line); background: var(--cream); height: 52px;
+  }
+  .nav-logo { grid-column:1; display:flex; align-items:center; padding:0 28px; font-family:'Syne',sans-serif; font-weight:800; font-size:15px; letter-spacing:-0.3px; border-right:1px solid var(--line); text-decoration:none; color:var(--ink); }
+  .nav-step-label { grid-column:2/4; display:flex; align-items:center; justify-content:center; font-size:10px; letter-spacing:4px; text-transform:uppercase; color:var(--ink-mute); border-right:1px solid var(--line); gap:8px; }
+  .nav-step-accent { color:var(--accent); font-weight:500; }
+  .nav-back { grid-column:4; display:flex; align-items:center; justify-content:flex-start; padding:0 20px; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); cursor:pointer; transition:color .2s; gap:0; }
+  .nav-back:hover { color:var(--ink); }
+  .nav-avatar {
+    margin-left:auto;
+    width:32px; height:32px; background:var(--accent); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Syne',sans-serif; font-weight:800; font-size:12px;
+    color:#fff; cursor:pointer; border:none;
+    transition:background .2s;
+  }
+  .nav-avatar:hover { background:var(--ink); }
+
+  /* PROGRESS BAR */
+  .progress-bar-wrap {
+    position: fixed; top: 52px; left: 0; right: 0; z-index: 99;
+    height: 3px; background: var(--line);
+  }
+  .progress-bar-fill {
+    height: 100%; background: var(--accent);
+    transition: width 0.6s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* MAIN LAYOUT */
+  main { padding-top: 55px; min-height: 100vh; position: relative; z-index: 1; }
+
+  /* STEP HEADER */
+  .step-header {
+    display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;
+    border-bottom: 1px solid var(--line); height: 80px;
+  }
+  .step-header-left {
+    grid-column:1; padding:0 28px; display:flex; flex-direction:column; justify-content:center;
+    border-right:1px solid var(--line);
+  }
+  .step-eyebrow { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:4px; }
+  .step-title-h { font-family:'Syne',sans-serif; font-size:18px; font-weight:800; letter-spacing:-0.5px; }
+  .step-header-mid {
+    grid-column:2/4; padding:0 28px; display:flex; align-items:center;
+    border-right:1px solid var(--line);
+  }
+  .step-desc-h { font-size:12px; color:var(--ink-mute); line-height:1.7; font-weight:300; max-width:420px; }
+  .step-header-right {
+    grid-column:4; padding:0 28px; display:flex; align-items:center; justify-content:flex-end;
+  }
+  .step-counter {
+    font-family:'Syne Mono',monospace; font-size:11px; color:var(--ink-mute); letter-spacing:2px;
+  }
+  .step-counter span { color:var(--accent); }
+
+  /* STEP PANELS */
+  .step-panel { display:none; }
+  .step-panel.active { display:block; animation: panelIn 0.4s cubic-bezier(.4,0,.2,1); }
+  @keyframes panelIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
+
+  /* SUBJECT GRID - STEP 1 */
+  .subject-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    border-bottom: 1px solid var(--line);
+  }
+  .subject-card {
+    padding: 40px 28px 32px;
+    border-right: 1px solid var(--line);
+    cursor: pointer;
+    position: relative; overflow: hidden;
+    transition: background 0.25s;
+  }
+  .subject-card:last-child { border-right:none; }
+  .subject-card:hover { background: var(--cream-hover); }
+  .subject-card.selected { background: var(--ink); }
+  .subject-card::after {
+    content:''; position:absolute; bottom:0; left:0; width:100%; height:3px;
+    background: var(--subject-color-card, var(--accent));
+    transform: scaleX(0); transform-origin:left; transition:transform 0.3s;
+  }
+  .subject-card:hover::after, .subject-card.selected::after { transform:scaleX(1); }
+  .sc-num {
+    font-family:'Syne Mono',monospace; font-size:10px; letter-spacing:2px;
+    color:var(--ink-mute); margin-bottom:24px;
+    transition: color 0.25s;
+  }
+  .subject-card.selected .sc-num { color:rgba(255,255,255,0.4); }
+  .sc-color-bar {
+    width:24px; height:3px; border-radius:1px; margin-bottom:18px;
+    transition: width 0.3s;
+  }
+  .subject-card:hover .sc-color-bar, .subject-card.selected .sc-color-bar { width:44px; }
+  .sc-name {
+    font-family:'Syne',sans-serif; font-size:15px; font-weight:800;
+    margin-bottom:10px; transition:color .25s;
+  }
+  .subject-card.selected .sc-name { color:#fff; }
+  .sc-topics { font-size:11px; color:var(--ink-mute); line-height:1.8; transition:color .25s; }
+  .subject-card.selected .sc-topics { color:rgba(255,255,255,0.4); }
+  .sc-check {
+    position:absolute; top:16px; right:16px;
+    width:22px; height:22px; border-radius:50%;
+    background: var(--accent); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; opacity:0;
+    transition: opacity .2s, transform .2s;
+    transform: scale(0.6);
+  }
+  .subject-card.selected .sc-check { opacity:1; transform:scale(1); }
+
+  /* TWO COL FORM */
+  .form-body {
+    display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;
+  }
+  .form-sidebar {
+    grid-column:1; padding:40px 28px;
+    border-right:1px solid var(--line);
+    display:flex; flex-direction:column; justify-content:space-between;
+    min-height:400px;
+  }
+  .sidebar-label {
+    font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:12px;
+  }
+  .sidebar-subject-display {
+    font-family:'Syne',sans-serif; font-size:22px; font-weight:800; line-height:1.1;
+    margin-bottom:4px;
+  }
+  .sidebar-subject-display .s-accent { color: var(--accent); }
+  .sidebar-note { font-size:11px; color:var(--ink-mute); line-height:1.8; font-weight:300; }
+  .sidebar-tip {
+    background:var(--cream-dark); border:1px solid var(--line); padding:16px;
+    font-size:11px; color:var(--ink-mute); line-height:1.7;
+  }
+  .sidebar-tip-label { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+  .form-main {
+    grid-column:2/5; padding:40px;
+  }
+
+  /* FIELD GROUPS */
+  .field-group { margin-bottom:36px; }
+  .field-label {
+    font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--ink-mute);
+    display:block; margin-bottom:14px;
+  }
+  .field-hint { font-size:11px; color:var(--ink-faint); margin-bottom:14px; font-weight:300; }
+
+  /* OPTION BUTTONS */
+  .option-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .option-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+  .option-grid-4 { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; }
+  .opt-btn {
+    padding:14px 16px; border:1px solid var(--line);
+    background:transparent; color:var(--ink-mute);
+    font-family:'Inter',sans-serif; font-size:12px;
+    cursor:pointer; transition:all .2s; text-align:left;
+    display:flex; align-items:flex-start; gap:10px;
+    position:relative; overflow:hidden;
+  }
+  .opt-btn::before {
+    content:''; position:absolute; bottom:0; left:0; width:2px; height:0%;
+    background:var(--accent); transition:height .25s;
+  }
+  .opt-btn:hover { border-color:var(--ink-mute); color:var(--ink); background:var(--cream-hover); }
+  .opt-btn:hover::before { height:100%; }
+  .opt-btn.selected { border-color:var(--ink); background:var(--ink); color:#fff; }
+  .opt-btn.selected::before { display:none; }
+  .opt-btn-icon { font-size:14px; flex-shrink:0; margin-top:1px; }
+  .opt-btn-text { display:flex; flex-direction:column; gap:2px; }
+  .opt-btn-title { font-weight:500; }
+  .opt-btn-sub { font-size:10px; opacity:0.6; font-weight:300; }
+  .opt-check {
+    margin-left:auto; flex-shrink:0;
+    width:16px; height:16px; border-radius:50%;
+    background:var(--accent); display:flex; align-items:center; justify-content:center;
+    font-size:9px; color:#fff; opacity:0; transition:opacity .2s;
+  }
+  .opt-btn.selected .opt-check { opacity:1; }
+
+  /* TOPIC CHIPS */
+  .topic-chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .topic-chip {
+    padding:10px 16px; border:1px solid var(--line);
+    background:transparent; color:var(--ink-mute);
+    font-family:'Inter',sans-serif; font-size:12px;
+    cursor:pointer; transition:all .2s;
+    position:relative; overflow:hidden;
+  }
+  .topic-chip::after {
+    content:''; position:absolute; bottom:0; left:0; height:2px; width:0%;
+    background:var(--accent); transition:width .25s;
+  }
+  .topic-chip:hover { border-color:var(--ink-mute); color:var(--ink); }
+  .topic-chip:hover::after { width:100%; }
+  .topic-chip.selected { background:var(--ink); border-color:var(--ink); color:#fff; }
+  .topic-chip.selected::after { display:none; }
+  .topic-chip-check { margin-left:6px; color:var(--accent); display:none; }
+  .topic-chip.selected .topic-chip-check { display:inline; }
+  .topic-limit { font-size:10px; letter-spacing:2px; color:var(--ink-faint); margin-top:12px; text-transform:uppercase; }
+  .topic-limit span { color:var(--accent); }
+
+  /* PERFORMANCE SLIDER */
+  .perf-track {
+    display:grid; grid-template-columns:1fr 1fr 1fr 1fr;
+    gap:1px; background:var(--line); border:1px solid var(--line);
+  }
+  .perf-item {
+    background:var(--cream); padding:16px 18px; cursor:pointer; transition:background .2s;
+    position:relative;
+  }
+  .perf-item:hover { background:var(--cream-hover); }
+  .perf-item.selected { background:var(--ink); }
+  .perf-bar {
+    height:3px; border-radius:1px; margin-bottom:12px;
+    transition:all .3s;
+  }
+  .perf-pct { font-family:'Syne Mono',monospace; font-size:12px; color:var(--ink-mute); margin-bottom:4px; transition:color .2s; }
+  .perf-item.selected .perf-pct { color:rgba(255,255,255,0.5); }
+  .perf-label { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; transition:color .2s; }
+  .perf-item.selected .perf-label { color:#fff; }
+  .perf-check {
+    position:absolute; top:12px; right:12px;
+    width:18px; height:18px; border-radius:50%; background:var(--accent);
+    display:flex; align-items:center; justify-content:center;
+    font-size:9px; color:#fff; opacity:0; transition:opacity .2s;
+  }
+  .perf-item.selected .perf-check { opacity:1; }
+
+  /* DIVIDER */
+  .field-divider { border:none; border-top:1px solid var(--line); margin:32px 0; }
+
+  /* STEP 3 - TOPICS SPECIFIC */
+  .topics-body {
+    display:grid; grid-template-columns:1fr 1fr 1fr 1fr;
+    min-height:400px;
+  }
+  .topics-info {
+    grid-column:1; padding:40px 28px;
+    border-right:1px solid var(--line);
+    display:flex; flex-direction:column; gap:24px;
+  }
+  .topics-main { grid-column:2/5; padding:40px; }
+  .info-box { border:1px solid var(--line); padding:20px; }
+  .info-box-label { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:8px; display:block; }
+  .info-box-val { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; }
+  .info-box-sub { font-size:11px; color:var(--ink-mute); margin-top:4px; font-weight:300; }
+  .selected-topics-display {
+    background:var(--cream-dark); border:1px solid var(--line); padding:16px;
+    min-height:80px; display:flex; flex-wrap:wrap; gap:8px; align-content:flex-start;
+  }
+  .sel-topic-tag {
+    padding:4px 12px; background:var(--ink); color:#fff;
+    font-size:11px; font-family:'Syne',sans-serif; font-weight:700;
+    display:flex; align-items:center; gap:6px;
+  }
+  .sel-topic-remove { cursor:pointer; color:var(--accent); font-size:13px; }
+
+  /* BOTTOM ACTION BAR */
+  .action-bar {
+    display:grid; grid-template-columns:1fr 1fr 1fr 1fr;
+    border-top:1px solid var(--line); height:72px;
+    position:sticky; bottom:0; background:var(--cream); z-index:50;
+  }
+  .action-left {
+    grid-column:1; display:flex; align-items:center; padding:0 28px;
+    border-right:1px solid var(--line);
+  }
+  .action-validation {
+    font-size:10px; letter-spacing:2px; text-transform:uppercase;
+    color:var(--ink-mute);
+  }
+  .action-validation.ready { color:var(--success); }
+  .action-validation.error { color:var(--accent); }
+  .action-mid {
+    grid-column:2/4; display:flex; align-items:center; padding:0 40px;
+    border-right:1px solid var(--line); gap:20px;
+  }
+  .step-pip {
+    width:8px; height:8px; border-radius:50%; background:var(--line);
+    transition:background .3s, transform .3s;
+  }
+  .step-pip.active { background:var(--ink); transform:scale(1.3); }
+  .step-pip.done { background:var(--accent); }
+  .action-right {
+    grid-column:4; display:flex; align-items:center; justify-content:flex-end; padding:0 28px; gap:12px;
+  }
+  .btn-back-sm {
+    padding:10px 20px; border:1px solid var(--line); background:transparent;
+    font-family:'Inter',sans-serif; font-size:10px; letter-spacing:3px; text-transform:uppercase;
+    color:var(--ink-mute); cursor:pointer; transition:all .2s;
+  }
+  .btn-back-sm:hover { border-color:var(--ink); color:var(--ink); }
+  .btn-next {
+    padding:12px 28px; background:var(--ink); border:none;
+    font-family:'Syne',sans-serif; font-size:10px; font-weight:700;
+    letter-spacing:3px; text-transform:uppercase; color:#fff;
+    cursor:pointer; transition:background .2s; display:flex; align-items:center; gap:8px;
+  }
+  .btn-next:hover { background:var(--accent); }
+  .btn-next:disabled { background:var(--ink-faint); cursor:not-allowed; }
+  .btn-next .btn-arrow { transition:transform .2s; }
+  .btn-next:hover .btn-arrow { transform:translateX(3px); }
+
+  /* REVIEW STEP */
+  .review-grid {
+    display:grid; grid-template-columns:1fr 1fr 1fr 1fr;
+  }
+  .review-hero {
+    grid-column:1/3; padding:48px 40px 48px 28px;
+    border-right:1px solid var(--line);
+    display:flex; flex-direction:column; justify-content:center;
+  }
+  .review-title {
+    font-family:'Syne',sans-serif; font-size:clamp(36px,5vw,60px);
+    font-weight:800; line-height:0.95; letter-spacing:-2px; margin-bottom:20px;
+  }
+  .review-title .r-accent { color:var(--accent); }
+  .review-subtitle { font-size:13px; color:var(--ink-mute); line-height:1.8; max-width:320px; font-weight:300; }
+  .review-details {
+    grid-column:3/5; padding:48px 28px;
+    display:flex; flex-direction:column; gap:0;
+  }
+  .review-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:16px 0; border-bottom:1px solid var(--line);
+  }
+  .review-row:last-child { border-bottom:none; }
+  .review-key { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); }
+  .review-val { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; text-align:right; max-width:200px; }
+  .review-topics-wrap { display:flex; flex-wrap:wrap; gap:4px; justify-content:flex-end; max-width:220px; }
+  .review-topic-tag {
+    padding:3px 10px; background:var(--ink); color:#fff;
+    font-family:'Syne Mono',monospace; font-size:10px;
+  }
+  .review-edit {
+    font-size:10px; letter-spacing:2px; text-transform:uppercase;
+    color:var(--accent); cursor:pointer; text-decoration:none;
+    display:block; text-align:right; margin-top:4px;
+  }
+  .review-analyze-btn {
+    display:flex; align-items:center; justify-content:center; gap:12px;
+    width:100%; padding:20px; background:var(--ink); border:none;
+    font-family:'Syne',sans-serif; font-size:11px; font-weight:700;
+    letter-spacing:4px; text-transform:uppercase; color:#fff;
+    cursor:pointer; transition:background .2s; margin-top:24px;
+  }
+  .review-analyze-btn:hover { background:var(--accent); }
+  .review-analyze-btn .btn-icon { animation:pulseDot 1.5s ease-in-out infinite; }
+  @keyframes pulseDot { 0%,100%{transform:scale(1)} 50%{transform:scale(1.3)} }
+
+  /* LOADING STATE */
+  .loading-overlay {
+    display:none; position:fixed; inset:0; background:var(--cream); z-index:200;
+    flex-direction:column;
+  }
+  .loading-overlay.active { display:flex; }
+  .loading-grid {
+    display:grid; grid-template-columns:1fr 1fr 1fr 1fr;
+    height:100%;
+  }
+  .loading-left {
+    grid-column:1; border-right:1px solid var(--line);
+    display:flex; flex-direction:column; justify-content:center; padding:48px 28px;
+  }
+  .loading-main {
+    grid-column:2/5; display:flex; flex-direction:column; justify-content:center; padding:48px 40px;
+  }
+  .loading-label { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:16px; }
+  .loading-title {
+    font-family:'Syne',sans-serif; font-size:clamp(32px,5vw,56px); font-weight:800;
+    letter-spacing:-2px; line-height:1; margin-bottom:32px;
+  }
+  .pipeline {
+    display:flex; flex-direction:column; gap:0;
+    border:1px solid var(--line);
+    margin-bottom:32px;
+  }
+  .pipeline-step {
+    padding:18px 24px; border-bottom:1px solid var(--line);
+    display:flex; align-items:center; gap:20px;
+    transition:background .3s;
+  }
+  .pipeline-step:last-child { border-bottom:none; }
+  .pipeline-step.running { background:var(--cream-dark); }
+  .pipeline-step.done { background:rgba(22,163,74,0.04); }
+  .ps-num {
+    font-family:'Syne Mono',monospace; font-size:11px; color:var(--ink-mute);
+    width:28px; flex-shrink:0;
+  }
+  .ps-name { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; flex:1; }
+  .ps-status {
+    font-size:10px; letter-spacing:2px; text-transform:uppercase;
+    width:80px; text-align:right;
+  }
+  .ps-status.waiting { color:var(--ink-faint); }
+  .ps-status.running { color:var(--accent); }
+  .ps-status.done { color:var(--success); }
+  .ps-bar { width:120px; height:2px; background:var(--line); flex-shrink:0; overflow:hidden; }
+  .ps-bar-fill { height:100%; background:var(--accent); width:0%; transition:width 1.5s ease; }
+  .ps-bar-fill.running { width:75%; }
+  .ps-bar-fill.done { width:100%; background:var(--success); }
+  .loading-profile {
+    display:flex; flex-wrap:wrap; gap:8px;
+  }
+  .lp-tag {
+    padding:6px 14px; border:1px solid var(--line);
+    font-size:11px; font-family:'Syne Mono',monospace; color:var(--ink-mute);
+    animation:tagFloat .5s ease forwards; opacity:0;
+  }
+  @keyframes tagFloat { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  /* UTIL */
+  .mt4 { margin-top:4px; }
+  .mt8 { margin-top:8px; }
+  .mt16 { margin-top:16px; }
+  /* ── USER PROFILE AVATAR + DROPDOWN ── */
+
+/* Dropdown panel */
+.profile-dropdown {
+  position: fixed; top: 52px; right: 0; z-index: 500;
+  width: 320px;
+  background: var(--cream); border: 1px solid var(--line);
+  border-top: none;
+  box-shadow: 0 12px 40px rgba(26,22,18,0.12);
+  display: none;
+  animation: dropIn .22s cubic-bezier(.4,0,.2,1);
+}
+.profile-dropdown.open { display: block; }
+@keyframes dropIn {
+  from { opacity:0; transform:translateY(-8px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* Header section of dropdown */
+.pd-header {
+  background: var(--ink); padding: 24px;
+  display: flex; align-items: center; gap: 16px;
+}
+.pd-avatar-lg {
+  width: 48px; height: 48px; background: var(--accent); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 20px; color: #fff;
+}
+.pd-name {
+  font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; color: var(--cream);
+  margin-bottom: 3px;
+}
+.pd-role {
+  font-size: 10px; letter-spacing: 2px; color: var(--accent);
+  font-family: 'Syne', sans-serif;
+}
+
+/* Stats row */
+.pd-stats {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  border-bottom: 1px solid var(--line);
+}
+.pd-stat {
+  padding: 16px 20px; border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.pd-stat:last-child { border-right: none; }
+.pd-stat-label {
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink-mute); font-family: 'Syne', sans-serif;
+}
+.pd-stat-val {
+  font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800;
+  line-height: 1;
+}
+.pd-stat-val.accent { color: var(--accent); }
+.pd-stat-val.success { color: var(--success); }
+
+/* Details section */
+.pd-details {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.pd-row {
+  display: flex; justify-content: space-between; align-items: center;
+}
+.pd-row-label {
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink-mute); font-family: 'Syne', sans-serif;
+}
+.pd-row-val {
+  font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+}
+
+/* Performance bar */
+.pd-perf-section {
+  padding: 16px 20px; border-bottom: 1px solid var(--line);
+}
+.pd-perf-label {
+  display: flex; justify-content: space-between;
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink-mute); font-family: 'Syne', sans-serif;
+  margin-bottom: 8px;
+}
+.pd-perf-track {
+  height: 3px; background: var(--line);
+}
+.pd-perf-fill {
+  height: 100%; background: var(--accent); transition: width 1s ease;
+}
+
+/* Recent tests */
+.pd-tests {
+  padding: 16px 20px; border-bottom: 1px solid var(--line);
+  max-height: 140px; overflow-y: auto;
+}
+.pd-tests-title {
+  font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink-mute); font-family: 'Syne', sans-serif; margin-bottom: 10px;
+}
+.pd-test-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 12px;
+}
+.pd-test-row:last-child { border-bottom: none; }
+.pd-test-subject { font-weight: 500; }
+.pd-test-score { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 12px; }
+.pd-test-score.good { color: var(--success); }
+.pd-test-score.mid  { color: var(--accent); }
+.pd-tests-empty { font-size: 12px; color: var(--ink-mute); font-style: italic; }
+
+/* Footer actions */
+.pd-footer {
+  display: grid; grid-template-columns: 1fr 1fr;
+}
+.pd-btn {
+  padding: 14px; background: transparent; border: none;
+  font-family: 'Syne', sans-serif; font-size: 10px; letter-spacing: 2px;
+  cursor: pointer; transition: all .2s; color: var(--ink-mute);
+  border-right: 1px solid var(--line);
+}
+.pd-btn:last-child { border-right: none; }
+.pd-btn:hover { background: var(--cream-dark); color: var(--ink); }
+.pd-btn.danger:hover { background: rgba(232,75,26,0.06); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- Grid -->
+<div class="grid-overlay">
+  <div class="grid-col"></div><div class="grid-col"></div>
+  <div class="grid-col"></div><div class="grid-col"></div>
+</div>
+
+
+<!-- ── PROFILE DROPDOWN PANEL ── -->
+<div class="profile-dropdown" id="profileDropdown">
+
+  <!-- Header -->
+  <div class="pd-header">
+    <div class="pd-avatar-lg" id="pdAvatarLg">?</div>
+    <div>
+      <div class="pd-name" id="pdName">Loading…</div>
+      <div class="pd-role">STUDENT · PATHWISE</div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="pd-stats">
+    <div class="pd-stat">
+      <span class="pd-stat-label">Grade</span>
+      <span class="pd-stat-val" id="pdGrade">9</span>
+    </div>
+    <div class="pd-stat">
+      <span class="pd-stat-label">Tests</span>
+      <span class="pd-stat-val accent" id="pdTestCount">0</span>
+    </div>
+    <div class="pd-stat">
+      <span class="pd-stat-label">Avg Score</span>
+      <span class="pd-stat-val success" id="pdAvgScore">—</span>
+    </div>
+  </div>
+
+  <!-- Details -->
+  <div class="pd-details">
+    <div class="pd-row">
+      <span class="pd-row-label">Email</span>
+      <span class="pd-row-val" id="pdEmail">—</span>
+    </div>
+    <div class="pd-row">
+      <span class="pd-row-label">Member Since</span>
+      <span class="pd-row-val" id="pdSince">—</span>
+    </div>
+  </div>
+
+  <!-- Performance bar -->
+  <div class="pd-perf-section">
+    <div class="pd-perf-label">
+      <span>Performance Analysis</span>
+      <span id="pdPerfPct">—</span>
+    </div>
+    <div class="pd-perf-track">
+      <div class="pd-perf-fill" id="pdPerfFill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- Recent tests -->
+  <div class="pd-tests">
+    <div class="pd-tests-title">Recent Tests</div>
+    <div id="pdTestsList"><span class="pd-tests-empty">No tests taken yet.</span></div>
+  </div>
+
+  <!-- Footer -->
+  <div class="pd-footer">
+    <button class="pd-btn" onclick="closeProfile()">CLOSE</button>
+    <button class="pd-btn danger" onclick="handleLogout()">LOGOUT →</button>
+  </div>
+
+</div>
+<!-- Nav -->
+<nav>
+  <a class="nav-logo" href="#">PATHWISE</a>
+  <div class="nav-step-label">Assessment <span class="nav-step-accent" id="navStepText">· Step 1 of 3</span></div>
+  <div class="nav-back">
+    <span onclick="goBack()" style="cursor:pointer;">← Back</span>
+    <button class="nav-avatar" id="profileAvatarBtn" onclick="toggleProfile()" title="My Profile">
+      <span id="userInitials">?</span>
+    </button>
+  </div>
+</nav>
+
+<!-- Progress Bar -->
+<div class="progress-bar-wrap">
+  <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+</div>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-grid">
+    <div class="loading-left">
+      <div class="loading-label">Your Profile</div>
+      <div style="font-family:'Syne Mono',monospace; font-size:11px; color:var(--ink-mute); line-height:2.2; margin-top:8px;" id="loadingProfile"></div>
+    </div>
+    <div class="loading-main">
+      <div class="loading-label">· Analyzing</div>
+      <h2 class="loading-title" id="loadingTitle">Building your<br/>learning <span style="color:var(--accent)">plan.</span></h2>
+      <div class="pipeline" id="pipeline">
+        <div class="pipeline-step" id="ps1">
+          <span class="ps-num">01</span>
+          <span class="ps-name">Profiling student</span>
+          <div class="ps-bar"><div class="ps-bar-fill" id="pb1"></div></div>
+          <span class="ps-status waiting" id="pst1">Waiting</span>
+        </div>
+        <div class="pipeline-step" id="ps2">
+          <span class="ps-num">02</span>
+          <span class="ps-name">Mapping weaknesses</span>
+          <div class="ps-bar"><div class="ps-bar-fill" id="pb2"></div></div>
+          <span class="ps-status waiting" id="pst2">Waiting</span>
+        </div>
+        <div class="pipeline-step" id="ps3">
+          <span class="ps-num">03</span>
+          <span class="ps-name">Curating resources</span>
+          <div class="ps-bar"><div class="ps-bar-fill" id="pb3"></div></div>
+          <span class="ps-status waiting" id="pst3">Waiting</span>
+        </div>
+        <div class="pipeline-step" id="ps4">
+          <span class="ps-num">04</span>
+          <span class="ps-name">Generating plan</span>
+          <div class="ps-bar"><div class="ps-bar-fill" id="pb4"></div></div>
+          <span class="ps-status waiting" id="pst4">Waiting</span>
+        </div>
+      </div>
+      <div class="loading-profile" id="loadingTags"></div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS OVERLAY -->
+<div class="loading-overlay" id="resultsOverlay" style="overflow-y:auto;">
+  <div style="max-width:1100px; width:100%; margin:0 auto; padding:0 0 80px;">
+
+    <!-- Results Nav -->
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-bottom:1px solid var(--line); height:52px; background:var(--cream); position:sticky; top:0; z-index:10;">
+      <div style="padding:0 28px; display:flex; align-items:center; font-family:'Syne',sans-serif; font-weight:800; font-size:14px; border-right:1px solid var(--line);">PATHWISE</div>
+      <div style="grid-column:2/4; display:flex; align-items:center; justify-content:center; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); border-right:1px solid var(--line);">Analysis <span style="color:var(--accent); margin-left:8px;">Complete ✓</span></div>
+      <div style="padding:0 28px; display:flex; align-items:center; justify-content:flex-end;">
+        <button onclick="resetAll()" style="font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); background:none; border:none; cursor:pointer;">Start Over ←</button>
+      </div>
+    </div>
+
+    <!-- Hero -->
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-bottom:1px solid var(--line);">
+      <div style="grid-column:1/3; padding:48px 28px; border-right:1px solid var(--line);">
+        <div style="font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:14px;">AI Analysis Complete</div>
+        <h2 style="font-family:'Syne',sans-serif; font-size:clamp(36px,5vw,58px); font-weight:800; letter-spacing:-2px; line-height:0.95; margin-bottom:20px;">Your<br/>personalized<br/><span style="color:var(--accent)" id="res-subject-hero">plan.</span></h2>
+        <p style="font-size:12px; color:var(--ink-mute); line-height:1.8; max-width:300px;" id="res-motivation"></p>
+      </div>
+      <div style="grid-column:3/5; padding:40px 28px; display:grid; grid-template-rows:1fr 1fr; gap:0;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); border:1px solid var(--line); align-self:start;">
+          <div style="background:var(--cream); padding:16px 20px;">
+            <div style="font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:6px;">Severity</div>
+            <div style="font-family:'Syne',sans-serif; font-size:15px; font-weight:800;" id="res-severity">—</div>
+          </div>
+          <div style="background:var(--cream); padding:16px 20px;">
+            <div style="font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:6px;">Recovery</div>
+            <div style="font-family:'Syne',sans-serif; font-size:15px; font-weight:800;" id="res-recovery">—</div>
+          </div>
+          <div style="background:var(--cream); padding:16px 20px; grid-column:1/-1;">
+            <div style="font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:6px;">Root Cause</div>
+            <div style="font-size:12px; color:var(--ink-mid); line-height:1.7;" id="res-rootcause">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Knowledge Gaps -->
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-bottom:1px solid var(--line);">
+      <div style="grid-column:1; padding:32px 28px; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:center;">
+        <div style="font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:8px;">Identified</div>
+        <div style="font-family:'Syne',sans-serif; font-size:13px; font-weight:700;">Knowledge<br/>Gaps</div>
+      </div>
+      <div style="grid-column:2/5; padding:32px 28px; display:flex; flex-wrap:wrap; gap:10px; align-items:center;" id="res-gaps"></div>
+    </div>
+
+    <!-- Approach -->
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-bottom:1px solid var(--line);">
+      <div style="grid-column:1; padding:32px 28px; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:center;">
+        <div style="font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:8px;">Strategy</div>
+        <div style="font-family:'Syne',sans-serif; font-size:13px; font-weight:700;">Recommended<br/>Approach</div>
+      </div>
+      <div style="grid-column:2/5; padding:32px 28px; display:flex; align-items:center;">
+        <div style="font-size:13px; color:var(--ink-mid); line-height:1.8; border-left:2px solid var(--accent); padding-left:20px; font-style:italic;" id="res-approach">—</div>
+      </div>
+    </div>
+
+    <!-- Courses Header -->
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-bottom:1px solid var(--line); height:52px;">
+      <div style="grid-column:1/3; padding:0 28px; display:flex; align-items:center; font-family:'Syne',sans-serif; font-size:11px; font-weight:700; letter-spacing:4px; text-transform:uppercase; border-right:1px solid var(--line);">Recommended Courses</div>
+      <div style="grid-column:3; padding:0 28px; display:flex; align-items:center; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); border-right:1px solid var(--line);">Free + Paid Resources</div>
+      <div style="grid-column:4; padding:0 28px; display:flex; align-items:center; justify-content:flex-end; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--accent);" id="res-coursecount">— Courses</div>
+    </div>
+
+    <!-- Course Cards -->
+    <div id="res-courses"></div>
+
+    <!-- CTA -->
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-top:1px solid var(--line);">
+      <div style="grid-column:1/3; padding:40px 28px; border-right:1px solid var(--line);">
+        <div style="font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:12px;">Next Step</div>
+        <h3 style="font-family:'Syne',sans-serif; font-size:24px; font-weight:800; letter-spacing:-0.5px; margin-bottom:10px;">Ready to take<br/>the <span style="color:var(--accent)">assessment?</span></h3>
+        <p style="font-size:12px; color:var(--ink-mute); line-height:1.8;">Study the recommended resources above. When you feel ready, take the adaptive test — 10 questions generated specifically from your weak topics.</p>
+      </div>
+      <div style="grid-column:3/5; padding:40px 28px; display:flex; flex-direction:column; justify-content:center; gap:12px;">
+        <button onclick="goToTest()" style="padding:16px 28px; background:var(--ink); color:#fff; border:none; font-family:'Syne',sans-serif; font-size:10px; font-weight:700; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:background .2s;" onmouseover="this.style.background='var(--accent)'" onmouseout="this.style.background='var(--ink)'">Take Assessment Test →</button>
+        <button onclick="resetAll()" style="padding:14px 28px; background:transparent; color:var(--ink-mute); border:1px solid var(--line); font-family:'Syne',sans-serif; font-size:10px; letter-spacing:3px; text-transform:uppercase; cursor:pointer;">← Restart Profile</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<main>
+
+  <!-- ═══════════════════════════════ STEP 1: SUBJECT ═══════════════════════════════ -->
+  <div class="step-panel active" id="step1">
+    <div class="step-header">
+      <div class="step-header-left">
+        <div class="step-eyebrow">Step 01</div>
+        <div class="step-title-h">Choose Subject</div>
+      </div>
+      <div class="step-header-mid">
+        <p class="step-desc-h">Select the subject where you need the most help. Pathwise will build your entire learning plan around this subject.</p>
+      </div>
+      <div class="step-header-right">
+        <div class="step-counter"><span>1</span> / 3</div>
+      </div>
+    </div>
+
+    <div class="subject-grid">
+      <div class="subject-card" data-subject="Mathematics" style="--subject-color-card:#3B82F6" onclick="selectSubject(this)">
+        <div class="sc-check">✓</div>
+        <div class="sc-num">01</div>
+        <div class="sc-color-bar" style="background:#3B82F6"></div>
+        <div class="sc-name">Mathematics</div>
+        <div class="sc-topics">Algebra · Geometry · Trigonometry · Statistics · Real Numbers</div>
+      </div>
+      <div class="subject-card" data-subject="Science" style="--subject-color-card:#10B981" onclick="selectSubject(this)">
+        <div class="sc-check">✓</div>
+        <div class="sc-num">02</div>
+        <div class="sc-color-bar" style="background:#10B981"></div>
+        <div class="sc-name">Science</div>
+        <div class="sc-topics">Chemistry · Physics · Biology · Electricity · Optics</div>
+      </div>
+      <div class="subject-card" data-subject="English" style="--subject-color-card:#F59E0B" onclick="selectSubject(this)">
+        <div class="sc-check">✓</div>
+        <div class="sc-num">03</div>
+        <div class="sc-color-bar" style="background:#F59E0B"></div>
+        <div class="sc-name">English</div>
+        <div class="sc-topics">Grammar · Writing · Literature · Comprehension · Vocabulary</div>
+      </div>
+      <div class="subject-card" data-subject="Social Studies" style="--subject-color-card:#EA580C" onclick="selectSubject(this)">
+        <div class="sc-check">✓</div>
+        <div class="sc-num">04</div>
+        <div class="sc-color-bar" style="background:#EA580C"></div>
+        <div class="sc-name">Social Studies</div>
+        <div class="sc-topics">History · Geography · Civics · Economics</div>
+      </div>
+      <div class="subject-card" data-subject="Hindi" style="--subject-color-card:#EC4899" onclick="selectSubject(this)">
+        <div class="sc-check">✓</div>
+        <div class="sc-num">05</div>
+        <div class="sc-color-bar" style="background:#EC4899"></div>
+        <div class="sc-name">Hindi</div>
+        <div class="sc-topics">Vyakaran · Lekhan · Sahitya · Apathit Gadyansh</div>
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <div class="action-left">
+        <span class="action-validation" id="s1validation">Select a subject to continue</span>
+      </div>
+      <div class="action-mid">
+        <div class="step-pip active" id="pip1"></div>
+        <div class="step-pip" id="pip2"></div>
+        <div class="step-pip" id="pip3"></div>
+      </div>
+      <div class="action-right">
+        <button class="btn-next" id="s1next" disabled onclick="goToStep(2)">
+          Continue <span class="btn-arrow">→</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ STEP 2: PROFILE ═══════════════════════════════ -->
+  <div class="step-panel" id="step2">
+    <div class="step-header">
+      <div class="step-header-left">
+        <div class="step-eyebrow">Step 02</div>
+        <div class="step-title-h">Your Profile</div>
+      </div>
+      <div class="step-header-mid">
+        <p class="step-desc-h">Tell us your current performance level, how you prefer to learn, and what you're working towards. The AI uses all of this.</p>
+      </div>
+      <div class="step-header-right">
+        <div class="step-counter"><span>2</span> / 3</div>
+      </div>
+    </div>
+
+    <div class="form-body">
+      <div class="form-sidebar">
+        <div>
+          <div class="sidebar-label">Selected Subject</div>
+          <div class="sidebar-subject-display" id="sidebarSubject">—</div>
+          <div class="sidebar-note mt4">Your entire plan will be built around this subject.</div>
+        </div>
+        <div class="sidebar-tip">
+          <div class="sidebar-tip-label">AI Tip</div>
+          Be honest about your performance level. The AI gives better recommendations when you're accurate — not optimistic.
+        </div>
+      </div>
+      <div class="form-main">
+
+        <!-- Performance -->
+        <div class="field-group">
+          <label class="field-label">Current Performance Level</label>
+          <p class="field-hint">How are you currently scoring in this subject?</p>
+          <div class="perf-track">
+            <div class="perf-item" data-val="Very Weak (Below 40%)" onclick="selectPerf(this)">
+              <div class="perf-check">✓</div>
+              <div class="perf-bar" style="background:#DC2626; width:20%"></div>
+              <div class="perf-pct">Below 40%</div>
+              <div class="perf-label">Very Weak</div>
+            </div>
+            <div class="perf-item" data-val="Weak (40–60%)" onclick="selectPerf(this)">
+              <div class="perf-check">✓</div>
+              <div class="perf-bar" style="background:#F59E0B; width:50%"></div>
+              <div class="perf-pct">40 – 60%</div>
+              <div class="perf-label">Weak</div>
+            </div>
+            <div class="perf-item" data-val="Average (60–75%)" onclick="selectPerf(this)">
+              <div class="perf-check">✓</div>
+              <div class="perf-bar" style="background:#3B82F6; width:68%"></div>
+              <div class="perf-pct">60 – 75%</div>
+              <div class="perf-label">Average</div>
+            </div>
+            <div class="perf-item" data-val="Good (75%+)" onclick="selectPerf(this)">
+              <div class="perf-check">✓</div>
+              <div class="perf-bar" style="background:#16A34A; width:85%"></div>
+              <div class="perf-pct">75%+</div>
+              <div class="perf-label">Good</div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="field-divider"/>
+
+        <!-- Learning Style -->
+        <div class="field-group">
+          <label class="field-label">Learning Style Preference</label>
+          <p class="field-hint">How do you absorb information best?</p>
+          <div class="option-grid-2">
+            <button class="opt-btn" data-field="style" data-val="Videos" onclick="selectOpt(this)">
+              
+              <span class="opt-btn-text"><span class="opt-btn-title">Videos</span><span class="opt-btn-sub">YouTube, animated explainers</span></span>
+              <span class="opt-check">✓</span>
+            </button>
+            <button class="opt-btn" data-field="style" data-val="Reading & Notes" onclick="selectOpt(this)">
+              
+              <span class="opt-btn-text"><span class="opt-btn-title">Reading & Notes</span><span class="opt-btn-sub">PDFs, textbooks, summaries</span></span>
+              <span class="opt-check">✓</span>
+            </button>
+            <button class="opt-btn" data-field="style" data-val="Practice Problems" onclick="selectOpt(this)">
+              
+              <span class="opt-btn-text"><span class="opt-btn-title">Practice Problems</span><span class="opt-btn-sub">Exercises, worksheets, tests</span></span>
+              <span class="opt-check">✓</span>
+            </button>
+            <button class="opt-btn" data-field="style" data-val="Mixed" onclick="selectOpt(this)">
+              
+              <span class="opt-btn-text"><span class="opt-btn-title">Mixed Approach</span><span class="opt-btn-sub">All of the above together</span></span>
+              <span class="opt-check">✓</span>
+            </button>
+          </div>
+        </div>
+
+        <hr class="field-divider"/>
+
+        <!-- Goal -->
+        <div class="field-group">
+          <label class="field-label">Your Goal</label>
+          <p class="field-hint">What are you working towards this year?</p>
+          <div class="option-grid-2">
+            <button class="opt-btn" data-field="goal" data-val="Board Exam (CBSE)" onclick="selectOpt(this)">
+              
+              <span class="opt-btn-text"><span class="opt-btn-title">Board Exam (CBSE)</span><span class="opt-btn-sub">Pass with strong marks</span></span>
+              <span class="opt-check">✓</span>
+            </button>
+            <button class="opt-btn" data-field="goal" data-val="Score Above 90%" onclick="selectOpt(this)">
+              
+              <span class="opt-btn-text"><span class="opt-btn-title">Score Above 90%</span><span class="opt-btn-sub">Top performance target</span></span>
+              <span class="opt-check">✓</span>
+            </button>
+            <button class="opt-btn" data-field="goal" data-val="Clear Basics" onclick="selectOpt(this)">
+              
+              <span class="opt-btn-text"><span class="opt-btn-title">Clear My Basics</span><span class="opt-btn-sub">Build strong foundation</span></span>
+              <span class="opt-check">✓</span>
+            </button>
+            <button class="opt-btn" data-field="goal" data-val="Olympiad Preparation" onclick="selectOpt(this)">
+              
+              <span class="opt-btn-text"><span class="opt-btn-title">Olympiad Prep</span><span class="opt-btn-sub">Competitive excellence</span></span>
+              <span class="opt-check">✓</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <div class="action-left">
+        <span class="action-validation" id="s2validation">Complete all fields</span>
+      </div>
+      <div class="action-mid">
+        <div class="step-pip done" id="pip1b"></div>
+        <div class="step-pip active" id="pip2b"></div>
+        <div class="step-pip" id="pip3b"></div>
+      </div>
+      <div class="action-right">
+        <button class="btn-back-sm" onclick="goToStep(1)">← Back</button>
+        <button class="btn-next" id="s2next" disabled onclick="goToStep(3)">
+          Continue <span class="btn-arrow">→</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ STEP 3: WEAK TOPICS ═══════════════════════════════ -->
+  <div class="step-panel" id="step3">
+    <div class="step-header">
+      <div class="step-header-left">
+        <div class="step-eyebrow">Step 03</div>
+        <div class="step-title-h">Weak Topics</div>
+      </div>
+      <div class="step-header-mid">
+        <p class="step-desc-h">Select up to 3 topics where you feel least confident. The AI will generate resources and test questions specifically for these.</p>
+      </div>
+      <div class="step-header-right">
+        <div class="step-counter"><span>3</span> / 3</div>
+      </div>
+    </div>
+
+    <div class="topics-body">
+      <div class="topics-info">
+        <div>
+          <div class="sidebar-label">Selected Topics</div>
+          <div class="selected-topics-display" id="selectedTopicsDisplay">
+            <span style="font-size:11px; color:var(--ink-faint)">None selected yet</span>
+          </div>
+          <div class="topic-limit mt8">Max <span id="topicCount">0</span> / 3 selected</div>
+        </div>
+        <div class="info-box">
+          <span class="info-box-label">Subject</span>
+          <div class="info-box-val" id="topicSubjectLabel">—</div>
+        </div>
+        <div class="info-box">
+          <span class="info-box-label">Performance</span>
+          <div class="info-box-val" id="topicPerfLabel">—</div>
+          <div class="info-box-sub">The AI will calibrate difficulty to this level</div>
+        </div>
+        <div class="sidebar-tip">
+          <div class="sidebar-tip-label">Why this matters</div>
+          Specific topic selection = specific resources. The more precise you are, the better your plan.
+        </div>
+      </div>
+      <div class="topics-main">
+        <label class="field-label">Available Topics in <span id="topicSubjectInline">your subject</span></label>
+        <p class="field-hint mt4">Tap topics you struggle with. Select 1–3 topics maximum.</p>
+        <div class="topic-chips mt16" id="topicChipsContainer"></div>
+      </div>
+    </div>
+
+    <!-- REVIEW -->
+    <div style="border-top:1px solid var(--line);">
+      <div class="review-grid">
+        <div class="review-hero">
+          <h2 class="review-title">Ready to<br/>analyze your<br/><span class="r-accent">plan?</span></h2>
+          <p class="review-subtitle">Review your selections below. Once you're happy, the AI will analyze your profile and generate a completely personalized learning plan.</p>
+        </div>
+        <div class="review-details">
+          <div class="review-row">
+            <span class="review-key">Subject</span>
+            <div>
+              <div class="review-val" id="rv-subject">—</div>
+              <span class="review-edit" onclick="goToStep(1)">Edit →</span>
+            </div>
+          </div>
+          <div class="review-row">
+            <span class="review-key">Performance</span>
+            <div>
+              <div class="review-val" id="rv-perf">—</div>
+              <span class="review-edit" onclick="goToStep(2)">Edit →</span>
+            </div>
+          </div>
+          <div class="review-row">
+            <span class="review-key">Learning Style</span>
+            <div>
+              <div class="review-val" id="rv-style">—</div>
+            </div>
+          </div>
+          <div class="review-row">
+            <span class="review-key">Goal</span>
+            <div>
+              <div class="review-val" id="rv-goal">—</div>
+            </div>
+          </div>
+          <div class="review-row">
+            <span class="review-key">Weak Topics</span>
+            <div>
+              <div class="review-topics-wrap" id="rv-topics">—</div>
+              <span class="review-edit" onclick="goToStep(3)">Edit →</span>
+            </div>
+          </div>
+          <button class="review-analyze-btn" id="analyzeBtn" onclick="startAnalysis()">
+           
+            Analyze My Profile →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <div class="action-left">
+        <span class="action-validation" id="s3validation">Select at least 1 topic</span>
+      </div>
+      <div class="action-mid">
+        <div class="step-pip done"></div>
+        <div class="step-pip done"></div>
+        <div class="step-pip active"></div>
+      </div>
+      <div class="action-right">
+        <button class="btn-back-sm" onclick="goToStep(2)">← Back</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  // ── STATE ──
+  const state = {
+    subject: '', performance: '', style: '', goal: '',
+    topics: [],
+  };
+
+  const topicMap = {
+    'Mathematics': ['Algebra','Geometry','Trigonometry','Statistics','Real Numbers','Polynomials'],
+    'Science': ['Chemical Reactions','Electricity','Light & Optics','Life Processes','Heredity & Evolution','Metals & Non-metals'],
+    'English': ['Grammar','Writing Skills','Reading Comprehension','Literature','Vocabulary'],
+    'Social Studies': ['History','Geography','Political Science','Economics'],
+    'Hindi': ['Vyakaran','Lekhan','Apathit Gadyansh','Sahitya'],
+  };
+
+  // ── STEPS ──
+  let currentStep = 1;
+  function goToStep(n) {
+    document.querySelectorAll('.step-panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('step'+n).classList.add('active');
+    currentStep = n;
+    const pct = [0,33,66,100][n-1];
+    document.getElementById('progressBar').style.width = pct+'%';
+    document.getElementById('navStepText').textContent = `· Step ${n} of 3`;
+    window.scrollTo({top:0, behavior:'smooth'});
+    if(n===2) updateStep2UI();
+    if(n===3) updateStep3UI();
+  }
+  function goBack() {
+    if(currentStep > 1) goToStep(currentStep-1);
+    else window.location.href='#';
+  }
+
+  // ── STEP 1: SUBJECT ──
+  function selectSubject(el) {
+    document.querySelectorAll('.subject-card').forEach(c=>c.classList.remove('selected'));
+    el.classList.add('selected');
+    state.subject = el.dataset.subject;
+    document.getElementById('s1validation').textContent = `${state.subject} selected ✓`;
+    document.getElementById('s1validation').className = 'action-validation ready';
+    document.getElementById('s1next').disabled = false;
+  }
+
+  // ── STEP 2: PROFILE ──
+  function selectPerf(el) {
+    document.querySelectorAll('.perf-item').forEach(p=>p.classList.remove('selected'));
+    el.classList.add('selected');
+    state.performance = el.dataset.val;
+    validateStep2();
+  }
+  function selectOpt(el) {
+    const field = el.dataset.field;
+    document.querySelectorAll(`.opt-btn[data-field="${field}"]`).forEach(b=>b.classList.remove('selected'));
+    el.classList.add('selected');
+    state[field] = el.dataset.val;
+    validateStep2();
+  }
+  function validateStep2() {
+    const ok = state.performance && state.style && state.goal;
+    document.getElementById('s2next').disabled = !ok;
+    if(ok) {
+      document.getElementById('s2validation').textContent = 'Profile complete ✓';
+      document.getElementById('s2validation').className = 'action-validation ready';
+    } else {
+      const missing = [];
+      if(!state.performance) missing.push('performance');
+      if(!state.style) missing.push('learning style');
+      if(!state.goal) missing.push('goal');
+      document.getElementById('s2validation').textContent = `Select: ${missing.join(', ')}`;
+      document.getElementById('s2validation').className = 'action-validation';
+    }
+  }
+  function updateStep2UI() {
+    const sd = document.getElementById('sidebarSubject');
+    sd.innerHTML = state.subject ? `<span class="s-accent">${state.subject}</span>` : '—';
+  }
+
+  // ── STEP 3: TOPICS ──
+  function updateStep3UI() {
+    document.getElementById('topicSubjectLabel').textContent = state.subject || '—';
+    document.getElementById('topicSubjectInline').textContent = state.subject || 'your subject';
+    document.getElementById('topicPerfLabel').textContent = state.performance || '—';
+    buildTopicChips();
+    updateReview();
+  }
+  function buildTopicChips() {
+    const container = document.getElementById('topicChipsContainer');
+    const topics = topicMap[state.subject] || [];
+    container.innerHTML = '';
+    topics.forEach(t => {
+      const chip = document.createElement('button');
+      chip.className = 'topic-chip' + (state.topics.includes(t) ? ' selected' : '');
+      chip.innerHTML = `${t}<span class="topic-chip-check">✓</span>`;
+      chip.onclick = () => toggleTopic(t, chip);
+      container.appendChild(chip);
+    });
+    updateTopicDisplay();
+  }
+  function toggleTopic(t, chip) {
+    if(state.topics.includes(t)) {
+      state.topics = state.topics.filter(x=>x!==t);
+      chip.classList.remove('selected');
+    } else {
+      if(state.topics.length >= 3) return;
+      state.topics.push(t);
+      chip.classList.add('selected');
+    }
+    updateTopicDisplay();
+    updateReview();
+  }
+  function updateTopicDisplay() {
+    const count = state.topics.length;
+    document.getElementById('topicCount').textContent = count;
+    const display = document.getElementById('selectedTopicsDisplay');
+    if(count === 0) {
+      display.innerHTML = '<span style="font-size:11px;color:var(--ink-faint)">None selected yet</span>';
+    } else {
+      display.innerHTML = state.topics.map(t =>
+        `<div class="sel-topic-tag">${t}<span class="sel-topic-remove" onclick="removeTopic('${t}')">×</span></div>`
+      ).join('');
+    }
+    const v = document.getElementById('s3validation');
+    if(count > 0) {
+      v.textContent = `${count} topic${count>1?'s':''} selected ✓`;
+      v.className = 'action-validation ready';
+      document.getElementById('analyzeBtn').disabled = false;
+    } else {
+      v.textContent = 'Select at least 1 topic';
+      v.className = 'action-validation';
+    }
+  }
+  function removeTopic(t) {
+    state.topics = state.topics.filter(x=>x!==t);
+    buildTopicChips();
+    updateReview();
+  }
+  function updateReview() {
+    document.getElementById('rv-subject').textContent = state.subject || '—';
+    document.getElementById('rv-perf').textContent = state.performance || '—';
+    document.getElementById('rv-style').textContent = state.style || '—';
+    document.getElementById('rv-goal').textContent = state.goal || '—';
+    const tvWrap = document.getElementById('rv-topics');
+    if(state.topics.length === 0) {
+      tvWrap.innerHTML = '<span style="font-size:12px;color:var(--ink-faint)">None selected</span>';
+    } else {
+      tvWrap.innerHTML = state.topics.map(t=>`<div class="review-topic-tag">${t}</div>`).join('');
+    }
+  }
+
+  // ── API KEY — Replace with your Gemini API key from aistudio.google.com ──
+  const GEMINI_KEY = 'AIzaSyDm1UFiTyCnFApoS1MO62c6Gke0lBHH914';
+
+  function startAnalysis() {
+    if(state.topics.length === 0) return;
+    runAnalysis();
+  }
+
+  // ── PIPELINE ANIMATION HELPERS ──
+  function pipelineRun(stepNum) {
+    const id = 'ps'+stepNum, bar = 'pb'+stepNum, status = 'pst'+stepNum;
+    document.getElementById(id).classList.add('running');
+    document.getElementById(bar).classList.add('running');
+    document.getElementById(status).textContent = 'Running';
+    document.getElementById(status).className = 'ps-status running';
+  }
+  function pipelineDone(stepNum) {
+    const id = 'ps'+stepNum, bar = 'pb'+stepNum, status = 'pst'+stepNum;
+    document.getElementById(id).classList.remove('running');
+    document.getElementById(id).classList.add('done');
+    document.getElementById(bar).classList.remove('running');
+    document.getElementById(bar).classList.add('done');
+    document.getElementById(status).textContent = 'Done ✓';
+    document.getElementById(status).className = 'ps-status done';
+  }
+  function pipelineReset() {
+    for(let i=1;i<=4;i++){
+      const id='ps'+i,bar='pb'+i,status='pst'+i;
+      document.getElementById(id).classList.remove('running','done');
+      document.getElementById(bar).classList.remove('running','done');
+      document.getElementById(status).textContent = 'Waiting';
+      document.getElementById(status).className = 'ps-status waiting';
+    }
+  }
+
+  // ── MAIN API CALL ──
+  async function runAnalysis() {
+    // Show loading overlay
+    const overlay = document.getElementById('loadingOverlay');
+    overlay.classList.add('active');
+    pipelineReset();
+
+    // Populate left profile panel
+    document.getElementById('loadingProfile').innerHTML =
+      `Subject<br/><strong style="color:var(--ink)">${state.subject}</strong><br/><br/>` +
+      `Topics<br/><strong style="color:var(--ink)">${state.topics.join(', ')}</strong><br/><br/>` +
+      `Performance<br/><strong style="color:var(--ink)">${state.performance}</strong><br/><br/>` +
+      `Goal<br/><strong style="color:var(--ink)">${state.goal}</strong>`;
+
+    // Animate profile tags
+    const tagsEl = document.getElementById('loadingTags');
+    tagsEl.innerHTML = '';
+    [state.subject, ...state.topics, state.performance, state.style, state.goal].forEach((t,i) => {
+      const tag = document.createElement('div');
+      tag.className = 'lp-tag';
+      tag.style.animationDelay = (i*0.12)+'s';
+      tag.textContent = t;
+      tagsEl.appendChild(tag);
+    });
+
+    // Step 1: Profiling
+    pipelineRun(1);
+    await delay(600);
+    pipelineDone(1);
+
+    // Step 2: Mapping
+    pipelineRun(2);
+    await delay(400);
+
+    // ── GEMINI API CALL ──
+    const prompt = `
+You are an expert AI tutor for Class 10 CBSE students in India.
+Analyze this student profile deeply and generate a fully personalized learning plan.
+
+Student Profile:
+- Subject: ${state.subject}
+- Weak Topics: ${state.topics.join(', ')}
+- Current Performance: ${state.performance}
+- Learning Style: ${state.style}
+- Goal: ${state.goal}
+- Grade: Class 10, CBSE Board
+
+Return ONLY a valid JSON object. No markdown, no explanation, just JSON.
+
+{
+  "weakness_analysis": {
+    "severity": "High or Moderate or Low",
+    "root_cause": "2-3 sentence explanation of WHY this student is struggling with these specific topics",
+    "key_gaps": ["specific conceptual gap 1", "specific gap 2", "specific gap 3"],
+    "estimated_recovery_weeks": 5,
+    "approach": "specific personalized learning strategy for this student based on their style and performance"
+  },
+  "courses": [
+    {
+      "topic": "which weak topic this addresses",
+      "title": "specific course name tailored to Class 10 CBSE student",
+      "description": "2 sentence description of what this covers and why it suits this exact student",
+      "difficulty": "Beginner or Medium or Advanced",
+      "weeks": 4,
+      "format": "Video Series or Practice Problems or Mixed or Notes",
+      "free_resources": [
+        {
+          "type": "YouTube",
+          "name": "specific channel/video name relevant to CBSE Class 10",
+          "url": "https://www.youtube.com/results?search_query=CBSE+Class+10+${encodeURIComponent(state.topics[0])}",
+          "description": "what this covers specifically"
+        },
+        {
+          "type": "PDF",
+          "name": "NCERT Class 10 ${state.subject} Textbook",
+          "url": "https://ncert.nic.in/textbook.php",
+          "description": "Official free NCERT textbook - download relevant chapters"
+        },
+        {
+          "type": "Website",
+          "name": "relevant free learning site",
+          "url": "https://www.khanacademy.org",
+          "description": "free practice and concept videos"
+        }
+      ],
+      "paid_resources": [
+        {
+          "platform": "Physics Wallah or Byju's or Unacademy",
+          "course_name": "specific course name on that platform for Class 10",
+          "url": "https://www.pw.live",
+          "price_range": "₹499 – ₹1,999",
+          "why_worth_it": "one line reason why this paid course adds value beyond free resources"
+        }
+      ]
+    }
+  ],
+  "motivation_message": "Warm, specific 2-sentence message to this student about their situation and goal. Reference their specific subject and goal."
+}`;
+
+    let aiData = null;
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.7, maxOutputTokens: 3000 }
+          })
+        }
+      );
+      const data = await res.json();
+      if(data.error) throw new Error(data.error.message);
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const clean = text.replace(/```json|```/g,'').trim();
+      aiData = JSON.parse(clean);
+    } catch(err) {
+      overlay.classList.remove('active');
+      pipelineReset();
+      alert('⚠ API Error: ' + (err.message || 'Check your API key in the source code and try again.'));
+      return;
+    }
+
+    pipelineDone(2);
+    pipelineRun(3);
+    await delay(500);
+    pipelineDone(3);
+    pipelineRun(4);
+    await delay(400);
+    pipelineDone(4);
+    await delay(600);
+
+    // Hide loading, show results
+    overlay.classList.remove('active');
+    // Save to sessionStorage → navigate to results page
+    sessionStorage.setItem('pathwise_result', JSON.stringify(aiData));
+    sessionStorage.setItem('pathwise_profile', JSON.stringify({
+      subject: state.subject, topics: state.topics,
+      performance: state.performance, style: state.style, goal: state.goal,
+    }));
+    window.location.href = 'results.html';
+  }
+
+  function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  // ── RENDER RESULTS ──
+  function renderResults(data) {
+    const wa = data.weakness_analysis || {};
+    const courses = data.courses || [];
+
+    // Hero
+    document.getElementById('res-subject-hero').textContent = state.subject + '.';
+    document.getElementById('res-motivation').textContent = data.motivation_message || '';
+    document.getElementById('res-severity').textContent = wa.severity || '—';
+    document.getElementById('res-recovery').textContent = (wa.estimated_recovery_weeks || '—') + ' weeks';
+    document.getElementById('res-rootcause').textContent = wa.root_cause || '—';
+    document.getElementById('res-approach').textContent = wa.approach || '—';
+
+    // Knowledge gaps
+    const gapsEl = document.getElementById('res-gaps');
+    gapsEl.innerHTML = '';
+    (wa.key_gaps || []).forEach(g => {
+      gapsEl.innerHTML += `<div style="padding:8px 16px; border:1px solid var(--line); font-size:12px; color:var(--ink-mid); font-family:'Syne Mono',monospace; position:relative;">
+        <span style="position:absolute; top:0; left:0; width:2px; height:100%; background:var(--accent);"></span>
+        ${g}
+      </div>`;
+    });
+
+    // Course count
+    document.getElementById('res-coursecount').textContent = courses.length + ' Course' + (courses.length !== 1 ? 's' : '');
+
+    // Course cards
+    const coursesEl = document.getElementById('res-courses');
+    coursesEl.innerHTML = '';
+    courses.forEach((course, i) => {
+      const diffColor = course.difficulty === 'Beginner' ? '#16A34A' : course.difficulty === 'Medium' ? '#CA8A04' : '#DC2626';
+      const diffBg = course.difficulty === 'Beginner' ? 'rgba(22,163,74,0.06)' : course.difficulty === 'Medium' ? 'rgba(202,138,4,0.06)' : 'rgba(220,38,38,0.06)';
+
+      const freeHTML = (course.free_resources || []).map(r => `
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; padding:14px 0; border-bottom:1px solid var(--grid);">
+          <div style="flex:1;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
+              <span style="font-size:9px; letter-spacing:2px; text-transform:uppercase; padding:2px 8px; border:1px solid var(--line); color:var(--ink-mute); font-family:'Syne Mono',monospace;">${r.type}</span>
+              <span style="font-size:13px; color:var(--ink); font-weight:500;">${r.name}</span>
+            </div>
+            <div style="font-size:11px; color:var(--ink-mute); line-height:1.6;">${r.description}</div>
+          </div>
+          <a href="${r.url}" target="_blank" style="font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); text-decoration:none; border:1px solid rgba(232,75,26,0.3); padding:6px 12px; white-space:nowrap; flex-shrink:0;">Open →</a>
+        </div>
+      `).join('');
+
+      const paidHTML = (course.paid_resources || []).map(p => `
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; padding:14px 0; border-bottom:1px solid var(--grid);">
+          <div style="flex:1;">
+            <div style="font-size:9px; letter-spacing:3px; text-transform:uppercase; color:#6A8040; margin-bottom:3px; font-family:'Syne Mono',monospace;">${p.platform}</div>
+            <div style="font-size:13px; color:var(--ink); font-weight:500; margin-bottom:2px;">${p.course_name}</div>
+            <div style="font-size:11px; color:#6A8040;">${p.price_range} · ${p.why_worth_it}</div>
+          </div>
+          <a href="${p.url}" target="_blank" style="font-size:9px; letter-spacing:2px; text-transform:uppercase; color:#6A8040; text-decoration:none; border:1px solid rgba(106,128,64,0.4); padding:6px 12px; white-space:nowrap; flex-shrink:0;">View →</a>
+        </div>
+      `).join('');
+
+      coursesEl.innerHTML += `
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-bottom:1px solid var(--line);">
+          <div style="grid-column:1; padding:32px 28px; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+              <div style="font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:8px;">Topic ${i+1}</div>
+              <div style="font-family:'Syne',sans-serif; font-size:14px; font-weight:800; margin-bottom:6px;">${course.topic}</div>
+              <div style="font-size:11px; color:var(--ink-mute); margin-bottom:16px;">${course.format} · ${course.weeks} weeks</div>
+              <div style="display:inline-block; padding:4px 10px; font-size:9px; letter-spacing:2px; text-transform:uppercase; background:${diffBg}; color:${diffColor}; border:1px solid ${diffColor};">${course.difficulty}</div>
+            </div>
+            <div style="font-size:11px; color:var(--ink-mute); line-height:1.7; margin-top:16px; font-style:italic;">${course.description}</div>
+          </div>
+          <div style="grid-column:2/4; padding:32px 28px; border-right:1px solid var(--line);">
+            <div style="font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:16px; display:flex; align-items:center; gap:10px;">
+              <span style="color:#16A34A;">🆓</span> Free Resources
+            </div>
+            ${freeHTML}
+          </div>
+          <div style="grid-column:4; padding:32px 28px;">
+            <div style="font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:16px; display:flex; align-items:center; gap:10px;">
+              <span>💰</span> Paid Option
+            </div>
+            ${paidHTML}
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  // ── NAVIGATE TO TEST ──
+  function goToTest() {
+    const params = new URLSearchParams({
+      subject: state.subject,
+      topics: state.topics.join(","),
+      perf: state.performance,
+      goal: state.goal,
+      style: state.style,
+    });
+    window.location.href = "test.html?" + params.toString();
+  }
+
+  // ── RESET ──
+  function resetAll() {
+    document.getElementById('resultsOverlay').classList.remove('active');
+    document.getElementById('loadingOverlay').classList.remove('active');
+    state.subject=''; state.performance=''; state.style=''; state.goal=''; state.topics=[];
+    // Reset UI selections
+    document.querySelectorAll('.subject-card, .perf-item, .opt-btn, .topic-chip').forEach(el=>el.classList.remove('selected'));
+    document.getElementById('s1next').disabled=true;
+    document.getElementById('s2next').disabled=true;
+    document.getElementById('s1validation').textContent='Select a subject to continue';
+    document.getElementById('s1validation').className='action-validation';
+    goToStep(1);
+    pipelineReset();
+  }
+  // ── PROFILE DROPDOWN ────────────────────────────────────────
+  function initProfile() {
+    const name  = localStorage.getItem('pathwise_name')  || localStorage.getItem('pathwise_user_name') || 'Student';
+    const email = localStorage.getItem('pathwise_email') || '—';
+    const init  = name.trim().split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase() || '?';
+    const grade = localStorage.getItem('pathwise_grade') || '9';
+
+    // Avatar button
+    document.getElementById('userInitials').textContent  = init;
+    // Dropdown header
+    document.getElementById('pdAvatarLg').textContent    = init;
+    document.getElementById('pdName').textContent        = name;
+    document.getElementById('pdEmail').textContent       = email;
+    document.getElementById('pdGrade').textContent       = grade;
+
+    // Member since (createdAt from server, or today if not stored)
+    const since = localStorage.getItem('pathwise_created_at');
+    document.getElementById('pdSince').textContent = since
+      ? new Date(since).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'})
+      : new Date().toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
+
+    // Test history
+    const history = JSON.parse(localStorage.getItem('pathwise_test_history') || '[]');
+    document.getElementById('pdTestCount').textContent = history.length;
+
+    if (history.length > 0) {
+      const avg = Math.round(history.reduce((s, t) => s + (t.pct || 0), 0) / history.length);
+      document.getElementById('pdAvgScore').textContent  = avg + '%';
+      document.getElementById('pdPerfPct').textContent   = avg + '%';
+      document.getElementById('pdPerfFill').style.width  = avg + '%';
+      // Color: green if >=60, orange if >=40, red otherwise
+      const fill = document.getElementById('pdPerfFill');
+      fill.style.background = avg >= 60 ? 'var(--success)' : avg >= 40 ? '#D97706' : 'var(--accent)';
+      const scoreEl = document.getElementById('pdAvgScore');
+      scoreEl.className = 'pd-stat-val ' + (avg >= 60 ? 'success' : 'mid');
+
+      // Recent 4 tests
+      const listEl = document.getElementById('pdTestsList');
+      listEl.innerHTML = history.slice(-4).reverse().map(t => {
+        const cls = (t.pct || 0) >= 60 ? 'good' : 'mid';
+        return `<div class="pd-test-row">
+          <span class="pd-test-subject">${t.subject || 'Test'}</span>
+          <span class="pd-test-score ${cls}">${t.pct != null ? t.pct + '%' : '—'}</span>
+        </div>`;
+      }).join('');
+    } else {
+      document.getElementById('pdAvgScore').textContent = '—';
+      document.getElementById('pdPerfPct').textContent  = '—';
+    }
+  }
+
+  function toggleProfile() {
+    const dd = document.getElementById('profileDropdown');
+    dd.classList.toggle('open');
+    if (dd.classList.contains('open')) initProfile();
+  }
+
+  function closeProfile() {
+    document.getElementById('profileDropdown').classList.remove('open');
+  }
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', function(e) {
+    const btn = document.getElementById('profileAvatarBtn');
+    const dd  = document.getElementById('profileDropdown');
+    if (!btn.contains(e.target) && !dd.contains(e.target)) {
+      dd.classList.remove('open');
+    }
+  });
+
+  // Init on load
+  initProfile();
+
+  // Logout
+  window.handleLogout = function() {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = 'pathwise-auth.html';
+  };
+</script>
+</body>
+</html>

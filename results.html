@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pathwise — Your Learning Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Syne+Mono&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="icon" type="image/x-png" href="./Logo.png">
+<style>
+  :root {
+    --cream: #F0EBE1;
+    --cream-dark: #E8E1D6;
+    --ink: #1A1612;
+    --ink-mid: #3A3128;
+    --ink-mute: #8A7F72;
+    --ink-faint: #C4BAB0;
+    --accent: #E84B1A;
+    --line: rgba(26,22,18,0.12);
+    --line-strong: rgba(26,22,18,0.2);
+    --grid: rgba(26,22,18,0.06);
+    --success: #16A34A;
+    --success-bg: rgba(22,163,74,0.05);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--cream); color: var(--ink); font-family: 'Inter', sans-serif; min-height: 100vh; }
+
+  /* GRID */
+  .grid-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 0; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .grid-col { border-right: 1px solid var(--grid); }
+  .grid-col:last-child { border-right: none; }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;
+    border-bottom: 1px solid var(--line); background: var(--cream); height: 52px;
+  }
+  .nav-logo { grid-column:1; display:flex; align-items:center; padding:0 28px; font-family:'Syne',sans-serif; font-weight:800; font-size:15px; border-right:1px solid var(--line); }
+  .nav-mid { grid-column:2/4; display:flex; align-items:center; justify-content:center; gap:32px; border-right:1px solid var(--line); }
+  .nav-tab { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); cursor:pointer; padding:0 4px; border-bottom:2px solid transparent; height:52px; display:flex; align-items:center; transition:color .2s, border-color .2s; text-decoration:none; }
+  .nav-tab:hover { color:var(--ink); }
+  .nav-tab.active { color:var(--ink); border-bottom-color:var(--accent); }
+  .nav-right { grid-column:4; display:flex; align-items:center; justify-content:flex-end; padding:0 28px; gap:12px; }
+  .nav-btn { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); background:none; border:none; cursor:pointer; transition:color .2s; }
+  .nav-btn:hover { color:var(--accent); }
+  .nav-btn-primary { padding:8px 18px; background:var(--ink); color:#fff; border:none; font-family:'Syne',sans-serif; font-size:9px; font-weight:700; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:background .2s; }
+  .nav-btn-primary:hover { background:var(--accent); }
+
+  /* SECTIONS */
+  .section { display:none; }
+  .section.active { display:block; }
+
+  /* ═══ SECTION 1: ANALYSIS ═══ */
+
+  /* Hero */
+  .hero { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-bottom:1px solid var(--line); position:relative; z-index:1; }
+  .hero-left { grid-column:1/3; padding:56px 28px; border-right:1px solid var(--line); }
+  .hero-eyebrow { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:16px; }
+  .hero-title { font-family:'Syne',sans-serif; font-size:clamp(44px,6vw,72px); font-weight:800; letter-spacing:-2.5px; line-height:0.92; margin-bottom:20px; }
+  .hero-title .acc { color:var(--accent); }
+  .hero-motivation { font-size:13px; color:var(--ink-mute); line-height:1.9; max-width:380px; font-weight:300; }
+  .hero-right { grid-column:3/5; display:grid; grid-template-rows:1fr 1fr; }
+  .hero-stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); border-bottom:1px solid var(--line); }
+  .hstat { background:var(--cream); padding:20px 24px; }
+  .hstat-label { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:6px; }
+  .hstat-val { font-family:'Syne',sans-serif; font-size:17px; font-weight:800; }
+  .hstat-val.sev-high { color:var(--accent); }
+  .hstat-val.sev-moderate { color:#CA8A04; }
+  .hstat-val.sev-low { color:var(--success); }
+  .hero-approach { padding:24px; display:flex; align-items:flex-start; gap:14px; }
+  .approach-bar { width:3px; min-height:60px; background:var(--accent); flex-shrink:0; border-radius:1px; }
+  .approach-content { flex:1; }
+  .approach-label { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute); margin-bottom:8px; }
+  .approach-text { font-size:12px; color:var(--ink-mid); line-height:1.8; }
+
+  /* Root cause + gaps row */
+  .analysis-row { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-bottom:1px solid var(--line); }
+  .ar-label { grid-column:1; padding:32px 28px; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:center; gap:6px; }
+  .ar-section-num { font-family:'Syne Mono',monospace; font-size:10px; color:var(--ink-faint); letter-spacing:2px; }
+  .ar-section-title { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; }
+  .ar-content { grid-column:2/5; padding:32px 28px; }
+  .root-cause-text { font-size:13px; color:var(--ink-mid); line-height:1.9; }
+
+  /* Gaps */
+  .gaps-wrap { display:flex; flex-wrap:wrap; gap:10px; }
+  .gap-tag { padding:10px 18px; border:1px solid var(--line); font-size:12px; color:var(--ink-mid); font-family:'Syne Mono',monospace; position:relative; overflow:hidden; }
+  .gap-tag::before { content:''; position:absolute; left:0; top:0; width:3px; height:100%; background:var(--accent); }
+
+  /* Learning path */
+  .path-section { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-bottom:1px solid var(--line); }
+  .path-label { grid-column:1; padding:32px 28px; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:center; gap:6px; }
+  .path-content { grid-column:2/5; padding:32px 28px; display:flex; align-items:center; gap:0; overflow-x:auto; }
+  .path-step { display:flex; flex-direction:column; align-items:center; gap:8px; min-width:100px; }
+  .path-step-circle { width:40px; height:40px; border-radius:50%; border:2px solid var(--line); display:flex; align-items:center; justify-content:center; font-family:'Syne Mono',monospace; font-size:11px; color:var(--ink-mute); transition:all .3s; }
+  .path-step-circle.done { background:var(--ink); border-color:var(--ink); color:#fff; }
+  .path-step-circle.current { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .path-step-label { font-size:10px; color:var(--ink-mute); text-align:center; letter-spacing:1px; max-width:90px; line-height:1.4; }
+  .path-connector { flex:1; height:2px; background:var(--line); min-width:32px; }
+  .path-connector.done { background:var(--ink); }
+
+  /* ═══ SECTION 2: FREE RESOURCES ═══ */
+  .resources-header { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-bottom:1px solid var(--line); height:56px; }
+  .rh-cell { padding:0 28px; display:flex; align-items:center; border-right:1px solid var(--line); }
+  .rh-cell:last-child { border-right:none; }
+  .rh-title { font-family:'Syne',sans-serif; font-size:11px; font-weight:700; letter-spacing:4px; text-transform:uppercase; }
+  .rh-count { font-family:'Syne Mono',monospace; font-size:11px; color:var(--ink-mute); }
+  .rh-tag { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--success); }
+
+  .resource-course-block { border-bottom:1px solid var(--line); }
+  .rcb-header { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-bottom:1px solid var(--line); height:48px; background:var(--cream-dark); }
+  .rcbh-topic { grid-column:1/3; padding:0 28px; display:flex; align-items:center; gap:14px; border-right:1px solid var(--line); }
+  .rcbh-num { font-family:'Syne Mono',monospace; font-size:10px; color:var(--ink-mute); letter-spacing:2px; }
+  .rcbh-name { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; }
+  .rcbh-diff { font-size:9px; letter-spacing:2px; text-transform:uppercase; padding:3px 10px; }
+  .diff-beginner { background:var(--success-bg); color:var(--success); border:1px solid var(--success); }
+  .diff-medium { background:rgba(202,138,4,0.06); color:#CA8A04; border:1px solid #CA8A04; }
+  .diff-advanced { background:rgba(220,38,38,0.06); color:#DC2626; border:1px solid #DC2626; }
+  .rcbh-right { grid-column:3/5; padding:0 28px; display:flex; align-items:center; gap:16px; }
+  .rcbh-format { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--ink-mute); }
+  .rcbh-weeks { font-family:'Syne Mono',monospace; font-size:11px; color:var(--ink-mute); }
+
+  /* ── RESOURCE CARDS ── */
+  .resource-card { border-bottom:1px solid var(--line); }
+  .resource-card:last-child { border-bottom:none; }
+
+  /* YouTube card */
+  .yt-card { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; }
+  .yt-preview-cell { grid-column:1/3; border-right:1px solid var(--line); position:relative; background:var(--ink); cursor:pointer; overflow:hidden; min-height:200px; }
+  .yt-thumbnail { width:100%; height:100%; object-fit:cover; opacity:0.85; transition:opacity .3s; display:block; }
+  .yt-preview-cell:hover .yt-thumbnail { opacity:0.65; }
+  .yt-play-btn { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+  .yt-play-circle { width:56px; height:56px; border-radius:50%; background:rgba(220,38,38,0.9); display:flex; align-items:center; justify-content:center; transition:transform .2s; }
+  .yt-preview-cell:hover .yt-play-circle { transform:scale(1.1); }
+  .yt-play-triangle { width:0; height:0; border-top:12px solid transparent; border-bottom:12px solid transparent; border-left:20px solid #fff; margin-left:4px; }
+  .yt-duration-badge { position:absolute; bottom:10px; left:14px; background:rgba(0,0,0,0.75); color:#fff; font-size:9px; letter-spacing:2px; padding:3px 8px; font-family:'Syne Mono',monospace; text-transform:uppercase; }
+  .yt-type-badge { position:absolute; top:10px; left:14px; background:#DC2626; color:#fff; font-size:9px; letter-spacing:2px; padding:3px 10px; font-family:'Syne Mono',monospace; text-transform:uppercase; display:flex; align-items:center; gap:6px; }
+  .yt-info-cell { grid-column:3/5; padding:24px 28px; display:flex; flex-direction:column; justify-content:space-between; gap:16px; }
+  .yt-channel { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:#DC2626; font-family:'Syne Mono',monospace; margin-bottom:6px; }
+  .yt-title  { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; letter-spacing:-0.3px; line-height:1.2; margin-bottom:8px; }
+  .yt-desc   { font-size:12px; color:var(--ink-mute); line-height:1.7; font-weight:300; flex:1; }
+  .yt-actions { display:flex; gap:8px; align-items:center; padding-top:12px; border-top:1px solid var(--line); }
+  .yt-watch-btn { padding:10px 20px; background:#DC2626; color:#fff; border:none; font-family:'Syne',sans-serif; font-size:9px; font-weight:700; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:background .2s; text-decoration:none; display:inline-flex; align-items:center; gap:8px; }
+  .yt-watch-btn:hover { background:#b91c1c; }
+  .yt-preview-btn { padding:10px 16px; background:transparent; color:var(--ink-mute); border:1px solid var(--line); font-family:'Syne',sans-serif; font-size:9px; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:all .2s; }
+  .yt-preview-btn:hover { border-color:var(--ink); color:var(--ink); }
+
+
+
+  /* PDF card */
+  .pdf-card { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; min-height:120px; }
+  .pdf-icon-cell { grid-column:1; border-right:1px solid var(--line); display:flex; align-items:center; justify-content:center; background:rgba(232,75,26,0.03); padding:20px; }
+  .pdf-icon-box { width:64px; height:80px; border:2px solid var(--accent); display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding-bottom:8px; position:relative; }
+  .pdf-icon-box::before { content:''; position:absolute; top:0; right:0; width:20px; height:20px; background:var(--cream); border-bottom:2px solid var(--accent); border-left:2px solid var(--accent); }
+  .pdf-icon-text { font-family:'Syne Mono',monospace; font-size:11px; font-weight:700; color:var(--accent); letter-spacing:2px; }
+  .pdf-info-cell { grid-column:2/4; padding:24px 28px; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:center; gap:6px; }
+  .pdf-source { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--accent); font-family:'Syne Mono',monospace; }
+  .pdf-title  { font-family:'Syne',sans-serif; font-size:15px; font-weight:800; margin-bottom:4px; }
+  .pdf-desc   { font-size:11px; color:var(--ink-mute); line-height:1.6; }
+  .pdf-meta   { font-size:10px; color:var(--ink-faint); font-family:'Syne Mono',monospace; margin-top:4px; }
+  .pdf-action-cell { grid-column:4; padding:20px 28px; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:10px; }
+  .pdf-open-btn { padding:11px 20px; background:var(--accent); color:#fff; border:none; font-family:'Syne',sans-serif; font-size:9px; font-weight:700; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:background .2s; text-decoration:none; display:inline-block; text-align:center; }
+  .pdf-open-btn:hover { background:#c03a10; }
+  .pdf-dl-btn { padding:9px 16px; background:transparent; color:var(--ink-mute); border:1px solid var(--line); font-family:'Syne',sans-serif; font-size:9px; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:all .2s; text-decoration:none; display:inline-block; text-align:center; }
+  .pdf-dl-btn:hover { border-color:var(--ink); color:var(--ink); }
+
+  /* Website card */
+  .web-card { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; min-height:100px; }
+  .web-icon-cell { grid-column:1; border-right:1px solid var(--line); display:flex; align-items:center; justify-content:center; padding:20px; }
+  .web-globe { width:52px; height:52px; border-radius:50%; border:2px solid var(--success); display:flex; align-items:center; justify-content:center; font-size:20px; }
+  .web-info-cell { grid-column:2/4; padding:20px 28px; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:center; gap:5px; }
+  .web-source { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--success); font-family:'Syne Mono',monospace; }
+  .web-title  { font-family:'Syne',sans-serif; font-size:15px; font-weight:800; }
+  .web-desc   { font-size:11px; color:var(--ink-mute); line-height:1.6; }
+  .web-url    { font-size:10px; color:var(--ink-faint); font-family:'Syne Mono',monospace; margin-top:2px; }
+  .web-action-cell { grid-column:4; padding:20px 28px; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:8px; }
+  .web-visit-btn { padding:11px 20px; background:var(--success); color:#fff; border:none; font-family:'Syne',sans-serif; font-size:9px; font-weight:700; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:background .2s; text-decoration:none; display:inline-block; text-align:center; }
+  .web-visit-btn:hover { background:#15803d; }
+
+  /* type-badge kept for search count */
+  .type-badge { font-size:9px; letter-spacing:2px; text-transform:uppercase; padding:4px 10px; font-family:'Syne Mono',monospace; border:1px solid var(--line); color:var(--ink-mute); white-space:nowrap; }
+  .type-badge.yt  { border-color:rgba(220,38,38,0.4); color:#DC2626; background:rgba(220,38,38,0.04); }
+  .type-badge.pdf { border-color:rgba(232,75,26,0.4); color:var(--accent); background:rgba(232,75,26,0.04); }
+  .type-badge.web { border-color:rgba(22,163,74,0.4); color:var(--success); background:var(--success-bg); }
+
+  /* ═══ SECTION 3: PAID COURSES ═══ */
+  .paid-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); border-bottom:1px solid var(--line); }
+  .paid-card { background:var(--cream); padding:36px 28px; position:relative; overflow:hidden; transition:background .25s; }
+  .paid-card:hover { background:var(--cream-dark); }
+  .paid-card::after { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--line); transition:background .3s; }
+  .paid-card:hover::after { background:var(--accent); }
+  .pc-num { font-family:'Syne Mono',monospace; font-size:10px; color:var(--ink-faint); letter-spacing:2px; margin-bottom:16px; }
+  .pc-platform { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; font-family:'Syne Mono',monospace; }
+  .pc-name { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; letter-spacing:-0.3px; margin-bottom:10px; line-height:1.2; }
+  .pc-why { font-size:12px; color:var(--ink-mute); line-height:1.7; margin-bottom:20px; font-weight:300; }
+  .pc-footer { display:flex; justify-content:space-between; align-items:center; padding-top:16px; border-top:1px solid var(--line); }
+  .pc-price { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; color:var(--ink); }
+  .pc-link { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink); text-decoration:none; border:1px solid var(--line-strong); padding:8px 16px; transition:all .2s; }
+  .pc-link:hover { background:var(--ink); color:#fff; border-color:var(--ink); }
+  .pc-topic-tag { position:absolute; top:20px; right:20px; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink-mute); border:1px solid var(--line); padding:4px 10px; font-family:'Syne Mono',monospace; }
+
+  /* ═══ SECTION 4: LEARNING PATH ═══ */
+  .lpath-row { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-bottom:1px solid var(--line); min-height:80px; transition:background .2s; }
+  .lpath-row:hover { background:var(--cream-dark); }
+  .lpr-num { grid-column:1; padding:24px 28px; border-right:1px solid var(--line); display:flex; align-items:center; gap:14px; }
+  .lpr-circle { width:36px; height:36px; border-radius:50%; border:1.5px solid var(--ink); display:flex; align-items:center; justify-content:center; font-family:'Syne Mono',monospace; font-size:11px; flex-shrink:0; }
+  .lpr-circle.done { background:var(--ink); color:#fff; }
+  .lpr-circle.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .lpr-week { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--ink-mute); font-family:'Syne Mono',monospace; }
+  .lpr-content { grid-column:2/4; padding:24px 28px; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:center; gap:4px; }
+  .lpr-title { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; }
+  .lpr-desc { font-size:11px; color:var(--ink-mute); line-height:1.6; }
+  .lpr-status { grid-column:4; padding:24px 28px; display:flex; align-items:center; justify-content:flex-end; }
+  .lpr-badge { font-size:9px; letter-spacing:2px; text-transform:uppercase; padding:5px 12px; }
+  .badge-current { background:var(--accent); color:#fff; }
+  .badge-upcoming { border:1px solid var(--line); color:var(--ink-mute); }
+  .badge-done { background:var(--success-bg); color:var(--success); border:1px solid var(--success); }
+
+  /* BOTTOM CTA BAR */
+  .bottom-cta { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border-top:1px solid var(--line); min-height:100px; position:sticky; bottom:0; background:var(--cream); z-index:50; }
+  .bc-left { grid-column:1/3; padding:24px 28px; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:center; }
+  .bc-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; letter-spacing:-0.3px; margin-bottom:4px; }
+  .bc-sub { font-size:11px; color:var(--ink-mute); }
+  .bc-right { grid-column:3/5; padding:24px 28px; display:flex; align-items:center; justify-content:flex-end; gap:12px; }
+  .btn-test { padding:14px 32px; background:var(--accent); color:#fff; border:none; font-family:'Syne',sans-serif; font-size:10px; font-weight:700; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:background .2s; display:flex; align-items:center; gap:10px; text-decoration:none; }
+  .btn-test:hover { background:#c03a10; }
+  .btn-back { padding:12px 24px; background:transparent; color:var(--ink-mute); border:1px solid var(--line); font-family:'Syne',sans-serif; font-size:10px; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:all .2s; }
+  .btn-back:hover { border-color:var(--ink); color:var(--ink); }
+
+  /* NO DATA */
+  .no-data { padding:80px 40px; text-align:center; }
+  .no-data h2 { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; margin-bottom:12px; }
+  .no-data p { color:var(--ink-mute); font-size:13px; margin-bottom:24px; }
+  .no-data a { color:var(--accent); }
+
+  /* REVEAL */
+  .reveal { opacity:0; transform:translateY(16px); transition:opacity .5s ease, transform .5s ease; }
+  .reveal.visible { opacity:1; transform:translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="grid-overlay">
+  <div class="grid-col"></div><div class="grid-col"></div>
+  <div class="grid-col"></div><div class="grid-col"></div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">PATHWISE</div>
+  <div class="nav-mid">
+    <a class="nav-tab active" onclick="switchTab('analysis')">Analysis</a>
+    <a class="nav-tab" onclick="switchTab('free')">Free Resources</a>
+    <a class="nav-tab" onclick="switchTab('paid')">Paid Courses</a>
+    <a class="nav-tab" onclick="switchTab('path')">Learning Path</a>
+  </div>
+  <div class="nav-right">
+    <button class="nav-btn" onclick="window.location.href='onboarding.html'">← Redo</button>
+    <button class="nav-btn" onclick="window.location.href='progress.html'" style="color:var(--success);">Progress ↗</button>
+    <button class="nav-btn-primary" onclick="goToTest()">Take Test →</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div id="mainContent">
+  <div class="no-data" id="noData" style="display:none;">
+    <h2>No results found.</h2>
+    <p>It looks like you haven't completed the onboarding yet.</p>
+    <a href="onboarding.html">← Go back to onboarding</a>
+  </div>
+
+  <!-- ═══════════ TAB 1: ANALYSIS ═══════════ -->
+  <div class="section active" id="tab-analysis">
+
+    <!-- Hero -->
+    <div class="hero reveal">
+      <div class="hero-left">
+        <div class="hero-eyebrow" id="hero-eyebrow">AI Analysis Complete</div>
+        <h1 class="hero-title">
+          Your<br/>personalized<br/>
+          <span class="acc" id="hero-subject">plan.</span>
+        </h1>
+        <p class="hero-motivation" id="hero-motivation">—</p>
+      </div>
+      <div class="hero-right">
+        <div class="hero-stat-grid">
+          <div class="hstat">
+            <div class="hstat-label">Severity</div>
+            <div class="hstat-val" id="stat-severity">—</div>
+          </div>
+          <div class="hstat">
+            <div class="hstat-label">Recovery Time</div>
+            <div class="hstat-val" id="stat-recovery">—</div>
+          </div>
+          <div class="hstat">
+            <div class="hstat-label">Subject</div>
+            <div class="hstat-val" id="stat-subject">—</div>
+          </div>
+          <div class="hstat">
+            <div class="hstat-label">Goal</div>
+            <div class="hstat-val" id="stat-goal">—</div>
+          </div>
+        </div>
+        <div class="hero-approach">
+          <div class="approach-bar"></div>
+          <div class="approach-content">
+            <div class="approach-label">Recommended Approach</div>
+            <div class="approach-text" id="approach-text">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Root Cause -->
+    <div class="analysis-row reveal">
+      <div class="ar-label">
+        <div class="ar-section-num">01</div>
+        <div class="ar-section-title">Root Cause</div>
+      </div>
+      <div class="ar-content">
+        <p class="root-cause-text" id="root-cause-text">—</p>
+      </div>
+    </div>
+
+    <!-- Knowledge Gaps -->
+    <div class="analysis-row reveal">
+      <div class="ar-label">
+        <div class="ar-section-num">02</div>
+        <div class="ar-section-title">Knowledge Gaps</div>
+      </div>
+      <div class="ar-content">
+        <div class="gaps-wrap" id="gaps-wrap"></div>
+      </div>
+    </div>
+
+    <!-- Learning Path Visual -->
+    <div class="path-section reveal">
+      <div class="path-label">
+        <div class="ar-section-num">03</div>
+        <div class="ar-section-title">Your Path</div>
+      </div>
+      <div class="path-content" id="path-visual"></div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════ TAB 2: FREE RESOURCES ═══════════ -->
+  <div class="section" id="tab-free">
+    <div class="resources-header">
+      <div class="rh-cell" style="grid-column:1/3; border-right:1px solid var(--line);">
+        <span class="rh-title">Free Resources</span>
+      </div>
+      <div class="rh-cell" style="grid-column:3;">
+        <span class="rh-count" id="free-count">— resources</span>
+      </div>
+      <div class="rh-cell" style="grid-column:4;">
+        <span class="rh-tag">🆓 All Free</span>
+      </div>
+    </div>
+    <div id="free-resources-content"></div>
+  </div>
+
+  <!-- ═══════════ TAB 3: PAID COURSES ═══════════ -->
+  <div class="section" id="tab-paid">
+    <div class="resources-header">
+      <div class="rh-cell" style="grid-column:1/3; border-right:1px solid var(--line);">
+        <span class="rh-title">Paid Courses</span>
+      </div>
+      <div class="rh-cell" style="grid-column:3;">
+        <span class="rh-count" id="paid-count">— courses</span>
+      </div>
+      <div class="rh-cell" style="grid-column:4;">
+        <span style="font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-mute);">Worth the investment</span>
+      </div>
+    </div>
+    <div class="paid-grid" id="paid-courses-content"></div>
+  </div>
+
+  <!-- ═══════════ TAB 4: LEARNING PATH ═══════════ -->
+  <div class="section" id="tab-path">
+    <div class="resources-header">
+      <div class="rh-cell" style="grid-column:1/3; border-right:1px solid var(--line);">
+        <span class="rh-title">Learning Path</span>
+      </div>
+      <div class="rh-cell" style="grid-column:3;">
+        <span class="rh-count" id="path-weeks">— week plan</span>
+      </div>
+      <div class="rh-cell" style="grid-column:4;">
+        <span style="font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--accent);">Week by Week</span>
+      </div>
+    </div>
+    <div id="learning-path-content"></div>
+  </div>
+
+</div>
+
+<!-- STICKY BOTTOM CTA -->
+<div class="bottom-cta">
+  <div class="bc-left">
+    <div class="bc-title">Ready to test your knowledge?</div>
+    <div class="bc-sub">Take the adaptive test — 10 questions generated from your exact weak topics.</div>
+  </div>
+  <div class="bc-right">
+    <button class="btn-back" onclick="window.location.href='progress.html'">Progress ↗</button>
+    <button class="btn-back" onclick="window.location.href='onboarding.html'">← Back</button>
+    <a class="btn-test" id="testLink" onclick="goToTest()">
+       Take Assessment Test
+    </a>
+  </div>
+</div>
+
+<script>
+  // ── LOAD DATA ──
+  const rawResult  = sessionStorage.getItem('pathwise_result');
+  const rawProfile = sessionStorage.getItem('pathwise_profile');
+
+  if (!rawResult || !rawProfile) {
+    document.getElementById('noData').style.display = 'block';
+    document.getElementById('mainContent').style.display = 'none';
+  } else {
+    const data    = JSON.parse(rawResult);
+    const profile = JSON.parse(rawProfile);
+    renderAll(data, profile);
+  }
+
+  // ── TAB SWITCHING ──
+  function switchTab(name) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.target.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── NAVIGATE TO TEST ──
+  function goToTest() {
+    const profile = JSON.parse(sessionStorage.getItem('pathwise_profile') || '{}');
+    const params  = new URLSearchParams({
+      subject: profile.subject  || '',
+      topics:  (profile.topics  || []).join(','),
+      perf:    profile.performance || '',
+      goal:    profile.goal     || '',
+      style:   profile.style    || '',
+    });
+    window.location.href = 'test.html?' + params.toString();
+  }
+
+  // ── RENDER EVERYTHING ──
+  function renderAll(data, profile) {
+    const wa      = data.weakness_analysis || {};
+    const courses = data.courses || [];
+
+    renderAnalysis(wa, data, profile);
+    renderFreeResources(courses);
+    renderPaidCourses(courses);
+    renderLearningPath(courses, wa);
+
+    // Scroll reveal
+    const obs = new IntersectionObserver(entries =>
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+      { threshold: 0.1 }
+    );
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+  }
+
+  // ── ANALYSIS TAB ──
+  function renderAnalysis(wa, data, profile) {
+    document.getElementById('hero-subject').textContent   = (profile.subject || 'your subject') + '.';
+    document.getElementById('hero-motivation').textContent = data.motivation_message || '';
+    document.getElementById('hero-eyebrow').textContent   = `AI Analysis · ${profile.subject || ''}`;
+
+    const sev = (wa.severity || '').toLowerCase();
+    const sevEl = document.getElementById('stat-severity');
+    sevEl.textContent = wa.severity || '—';
+    sevEl.className   = 'hstat-val ' + (sev === 'high' ? 'sev-high' : sev === 'moderate' ? 'sev-moderate' : 'sev-low');
+
+    document.getElementById('stat-recovery').textContent = wa.estimated_recovery_weeks ? wa.estimated_recovery_weeks + ' weeks' : '—';
+    document.getElementById('stat-subject').textContent  = profile.subject || '—';
+    document.getElementById('stat-goal').textContent     = profile.goal    || '—';
+    document.getElementById('approach-text').textContent = wa.approach     || '—';
+    document.getElementById('root-cause-text').textContent = wa.root_cause || '—';
+
+    // Gaps
+    const gapsWrap = document.getElementById('gaps-wrap');
+    gapsWrap.innerHTML = '';
+    (wa.key_gaps || []).forEach(g => {
+      gapsWrap.innerHTML += `<div class="gap-tag">${g}</div>`;
+    });
+
+    // Path visual
+    const pathVis = document.getElementById('path-visual');
+    pathVis.innerHTML = '';
+    const steps = ['Profile\nAnalyzed', 'Study\nResources', 'Take Test', 'Review\nResults', 'Next\nCourse'];
+    steps.forEach((s, i) => {
+      if (i > 0) {
+        const conn = document.createElement('div');
+        conn.className = 'path-connector' + (i <= 1 ? ' done' : '');
+        pathVis.appendChild(conn);
+      }
+      pathVis.innerHTML += `
+        <div class="path-step">
+          <div class="path-step-circle ${i === 0 ? 'done' : i === 1 ? 'current' : ''}">${i + 1}</div>
+          <div class="path-step-label">${s.replace('\n', '<br/>')}</div>
+        </div>`;
+    });
+  }
+
+  // ── FREE RESOURCES TAB ──
+  function renderFreeResources(courses) {
+    const container = document.getElementById('free-resources-content');
+    container.innerHTML = '';
+    let totalCount = 0;
+
+    courses.forEach((course, i) => {
+      const diffClass = (course.difficulty||'').toLowerCase() === 'beginner' ? 'diff-beginner'
+                      : (course.difficulty||'').toLowerCase() === 'medium'   ? 'diff-medium'
+                      : 'diff-advanced';
+
+      let resourcesHTML = '';
+      (course.free_resources || []).forEach(r => {
+        totalCount++;
+        resourcesHTML += buildResourceCard(r, totalCount);
+      });
+
+      container.innerHTML += `
+        <div class="resource-course-block">
+          <div class="rcb-header">
+            <div class="rcbh-topic">
+              <span class="rcbh-num">0${i + 1}</span>
+              <span class="rcbh-name">${course.topic || course.title}</span>
+              <span class="rcbh-diff ${diffClass}">${course.difficulty || ''}</span>
+            </div>
+            <div class="rcbh-right">
+              <span class="rcbh-format">${course.format || ''}</span>
+              <span class="rcbh-weeks">${course.weeks || '?'} weeks</span>
+            </div>
+          </div>
+          ${resourcesHTML}
+        </div>`;
+    });
+
+    document.getElementById('free-count').textContent = totalCount + ' resources';
+  }
+
+  // ── BUILD INDIVIDUAL RESOURCE CARD ──
+  function buildResourceCard(r, idx) {
+    const url  = r.url  || '#';
+    const name = r.name || 'Resource';
+    const desc = r.description || '';
+    const type = (r.type || '').toLowerCase();
+
+    // ── YOUTUBE ──
+    if (type === 'youtube') {
+      const videoId = extractYouTubeId(url);
+      const thumbUrl = videoId
+        ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+        : null;
+      const embedUrl = videoId
+        ? `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`
+        : null;
+      const channelGuess = extractChannelFromName(name);
+
+      return `
+        <div class="resource-card">
+          <div class="yt-card">
+            <a href="${url}" target="_blank" rel="noopener" class="yt-preview-cell" style="text-decoration:none;display:block;">
+              ${thumbUrl
+                ? `<img class="yt-thumbnail" src="${thumbUrl}" alt="${name}"
+                    style="min-height:200px;"
+                    onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+                   <div style="display:none;width:100%;min-height:200px;background:var(--ink-mid);align-items:center;justify-content:center;">
+                     <span style="color:rgba(255,255,255,0.2);font-size:56px;">▶</span>
+                   </div>`
+                : `<div style="width:100%;min-height:200px;background:var(--ink-mid);display:flex;align-items:center;justify-content:center;">
+                     <span style="color:rgba(255,255,255,0.2);font-size:56px;">▶</span>
+                   </div>`
+              }
+              <div class="yt-play-btn">
+                <div class="yt-play-circle"><div class="yt-play-triangle"></div></div>
+              </div>
+              <div class="yt-type-badge">▶ YouTube</div>
+              <div class="yt-duration-badge">Opens YouTube ↗</div>
+            </a>
+            <div class="yt-info-cell">
+              <div>
+                <div class="yt-channel">${channelGuess}</div>
+                <div class="yt-title">${name}</div>
+                <div class="yt-desc">${desc}</div>
+              </div>
+              <div class="yt-actions">
+                <a href="${url}" target="_blank" rel="noopener" class="yt-watch-btn">▶ Watch on YouTube</a>
+                ${videoId
+                  ? `<a href="https://youtu.be/${videoId}" target="_blank" rel="noopener" class="yt-preview-btn">Direct Link ↗</a>`
+                  : ''}
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    // ── PDF ──
+    if (type === 'pdf') {
+      const isNcert = url.includes('ncert') || name.toLowerCase().includes('ncert');
+      const domain  = extractDomain(url);
+      return `
+        <div class="resource-card">
+          <div class="pdf-card">
+            <div class="pdf-icon-cell">
+              <div class="pdf-icon-box">
+                <div class="pdf-icon-text">PDF</div>
+              </div>
+            </div>
+            <div class="pdf-info-cell">
+              <div class="pdf-source">${isNcert ? 'NCERT Official' : domain || 'PDF Document'}</div>
+              <div class="pdf-title">${name}</div>
+              <div class="pdf-desc">${desc}</div>
+              <div class="pdf-meta">${url.length > 60 ? url.slice(0,60) + '…' : url}</div>
+            </div>
+            <div class="pdf-action-cell">
+              <a href="${url}" target="_blank" class="pdf-open-btn">Open PDF →</a>
+              <a href="${url}" download class="pdf-dl-btn">Download ↓</a>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    // ── WEBSITE ──
+    const domain = extractDomain(url);
+    const siteEmoji = getSiteEmoji(domain || url);
+    return `
+      <div class="resource-card">
+        <div class="web-card">
+          <div class="web-icon-cell">
+            <div class="web-globe">${siteEmoji}</div>
+          </div>
+          <div class="web-info-cell">
+            <div class="web-source">${domain || 'Website'}</div>
+            <div class="web-title">${name}</div>
+            <div class="web-desc">${desc}</div>
+            <div class="web-url">${url.length > 55 ? url.slice(0,55) + '…' : url}</div>
+          </div>
+          <div class="web-action-cell">
+            <a href="${url}" target="_blank" class="web-visit-btn">Visit Site →</a>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // ── HELPERS ──
+  function extractYouTubeId(url) {
+    if (!url) return null;
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([A-Za-z0-9_-]{11})/,
+      /youtube\.com\/results\?.*?(?:^|&)v=([A-Za-z0-9_-]{11})/,
+    ];
+    for (const p of patterns) {
+      const m = url.match(p);
+      if (m) return m[1];
+    }
+    // If it's a search URL, generate a search-based thumbnail placeholder
+    return null;
+  }
+
+  function extractChannelFromName(name) {
+    const known = ['Khan Academy','Physics Wallah','Vedantu','BYJU','Unacademy','Doubtnut',
+                   'MathonGo','Aakash','NCERT','LearnCBSE','CBSE'];
+    for (const k of known) {
+      if (name.toLowerCase().includes(k.toLowerCase())) return k;
+    }
+    return 'YouTube Channel';
+  }
+
+  function extractDomain(url) {
+    try { return new URL(url).hostname.replace('www.',''); }
+    catch { return null; }
+  }
+
+  function getSiteEmoji(domain) {
+    if (!domain) return '🌐';
+    const map = {
+      'khanacademy.org':'🎓', 'ncert.nic.in':'📚', 'pw.live':'⚡',
+      'byjus.com':'📖', 'unacademy.com':'🎯', 'doubtnut.com':'❓',
+      'toppr.com':'📝', 'meritnation.com':'⭐', 'vedantu.com':'🏫',
+      'mathongo.com':'🔢', 'aakash.ac.in':'🏆',
+    };
+    for (const [k,v] of Object.entries(map)) {
+      if (domain.includes(k)) return v;
+    }
+    return '🌐';
+  }
+
+
+
+  // ── PAID COURSES TAB ──
+  function renderPaidCourses(courses) {
+    const container = document.getElementById('paid-courses-content');
+    container.innerHTML = '';
+    let count = 0;
+
+    courses.forEach((course, i) => {
+      (course.paid_resources || []).forEach((p, j) => {
+        count++;
+        container.innerHTML += `
+          <div class="paid-card">
+            <span class="pc-topic-tag">${course.topic}</span>
+            <div class="pc-num">0${count}</div>
+            <div class="pc-platform">${p.platform}</div>
+            <div class="pc-name">${p.course_name}</div>
+            <div class="pc-why">${p.why_worth_it}</div>
+            <div class="pc-footer">
+              <span class="pc-price">${p.price_range}</span>
+              <a href="${p.url}" target="_blank" class="pc-link">View Course →</a>
+            </div>
+          </div>`;
+      });
+    });
+
+    if (count === 0) {
+      container.innerHTML = `<div style="padding:48px 28px; color:var(--ink-mute); font-size:13px; grid-column:1/-1;">No paid courses generated. Retry analysis.</div>`;
+    }
+    document.getElementById('paid-count').textContent = count + ' course' + (count !== 1 ? 's' : '');
+  }
+
+  // ── LEARNING PATH TAB ──
+  function renderLearningPath(courses, wa) {
+    const container = document.getElementById('learning-path-content');
+    container.innerHTML = '';
+    let weekNum = 1;
+    let totalWeeks = 0;
+
+    // Week 0 — Analysis (done)
+    container.innerHTML += `
+      <div class="lpath-row">
+        <div class="lpr-num">
+          <div class="lpr-circle done">✓</div>
+          <div class="lpr-week">Week 0</div>
+        </div>
+        <div class="lpr-content">
+          <div class="lpr-title">Profile Analysis Complete</div>
+          <div class="lpr-desc">AI analyzed your profile, identified weaknesses, and generated your personalized plan.</div>
+        </div>
+        <div class="lpr-status"><span class="lpr-badge badge-done">Done ✓</span></div>
+      </div>`;
+
+    courses.forEach((course, i) => {
+      const isFirst = i === 0;
+      const weeks = course.weeks || 2;
+      totalWeeks += weeks;
+      const status = isFirst ? 'active' : 'upcoming';
+      const badge  = isFirst ? 'badge-current' : 'badge-upcoming';
+      const label  = isFirst ? 'Current' : `Week ${weekNum}`;
+      container.innerHTML += `
+        <div class="lpath-row">
+          <div class="lpr-num">
+            <div class="lpr-circle ${isFirst ? 'active' : ''}">${i + 1}</div>
+            <div class="lpr-week">Week ${weekNum}–${weekNum + weeks - 1}</div>
+          </div>
+          <div class="lpr-content">
+            <div class="lpr-title">${course.title || course.topic}</div>
+            <div class="lpr-desc">${course.description || ''}</div>
+          </div>
+          <div class="lpr-status"><span class="lpr-badge ${badge}">${isFirst ? 'Start Here' : 'Upcoming'}</span></div>
+        </div>`;
+      weekNum += weeks;
+    });
+
+    // Final step — Take Test
+    container.innerHTML += `
+      <div class="lpath-row">
+        <div class="lpr-num">
+          <div class="lpr-circle">${courses.length + 1}</div>
+          <div class="lpr-week">Week ${weekNum}</div>
+        </div>
+        <div class="lpr-content">
+          <div class="lpr-title">Adaptive Assessment Test</div>
+          <div class="lpr-desc">Take the AI-generated test to measure your improvement across all weak topics.</div>
+        </div>
+        <div class="lpr-status">
+          <button class="lpr-badge badge-current" onclick="goToTest()" style="border:none; cursor:pointer; padding:6px 14px;">Take Test →</button>
+        </div>
+      </div>`;
+
+    document.getElementById('path-weeks').textContent = totalWeeks + ' week plan';
+  }
+</script>
+</body>
+</html>

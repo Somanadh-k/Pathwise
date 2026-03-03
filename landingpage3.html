@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pathwise — AI Personalized Learning Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Syne+Mono&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="icon" type="image/x-png" href="./Logo.png">
+
+<style>
+  :root {
+    --cream: #F0EBE1;
+    --cream-dark: #E5DED3;
+    --ink: #1A1612;
+    --ink-mid: #3A3128;
+    --ink-mute: #8A7F72;
+    --accent: #E84B1A;
+    --accent2: #FF6B35;
+    --grid: rgba(26,22,18,0.08);
+    --line: rgba(26,22,18,0.12);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* GRID OVERLAY */
+  .grid-overlay {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+  }
+  .grid-col { border-right: 1px solid var(--grid); }
+  .grid-col:last-child { border-right: none; }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    border-bottom: 1px solid var(--line);
+    background: var(--cream);
+    height: 52px;
+  }
+  .nav-logo {
+    grid-column: 1;
+    display: flex; align-items: center;
+    padding: 0 28px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: -0.3px;
+    border-right: 1px solid var(--line);
+  }
+  .nav-center {
+    grid-column: 2 / 4;
+    display: flex; align-items: center; justify-content: center;
+    gap: 48px;
+    border-right: 1px solid var(--line);
+  }
+  .nav-link {
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--ink-mute); text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-link:hover { color: var(--ink); }
+  .nav-cta {
+    grid-column: 4;
+    display: flex; align-items: center; justify-content: flex-end;
+    padding: 0 28px;
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+    
+  }
+  .nav-cta span{
+    cursor:pointer;
+  }
+
+  /* HERO SECTION */
+  .hero {
+    margin-top: 92px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    min-height: calc(100vh - 92px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* Top row */
+  .hero-top {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    height: 200px;
+    border-bottom: 1px solid var(--line);
+  }
+  .hero-top-label {
+    grid-column: 1;
+    padding: 28px;
+    border-right: 1px solid var(--line);
+    display: flex; flex-direction: column; justify-content: flex-end;
+  }
+  .eyebrow {
+    font-size: 9px; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--ink-mute); line-height: 1.8;
+  }
+  .hero-top-empty {
+    grid-column: 2 / 4;
+    border-right: 1px solid var(--line);
+    position: relative; overflow: hidden;
+  }
+  .hero-tag-float {
+    position: absolute; bottom: 28px; right: 28px;
+    font-family: 'Syne Mono', monospace;
+    font-size: 9px; letter-spacing: 2px; color: var(--ink-mute);
+    text-transform: uppercase;
+  }
+  .hero-top-right {
+    grid-column: 4;
+    padding: 28px;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    align-items: flex-end;
+  }
+  .scroll-hint {
+    font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--ink-mute);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .scroll-line {
+    width: 40px; height: 1px; background: var(--ink-mute);
+    transform-origin: left;
+    animation: scrollLine 2s ease-in-out infinite;
+  }
+  @keyframes scrollLine {
+    0%, 100% { transform: scaleX(1); opacity: 1; }
+    50% { transform: scaleX(0.3); opacity: 0.3; }
+  }
+
+  /* Middle row - main content */
+  .hero-mid {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    border-bottom: 1px solid var(--line);
+  }
+  .hero-orb-cell {
+    grid-column: 1 / 3;
+    border-right: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    padding: 60px;
+    min-height: 340px;
+    position: relative;
+  }
+  .orb-container {
+    position: relative; width: 200px; height: 200px;
+    transform-style: preserve-3d;
+  }
+  .orb-ring {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    border: 1.5px solid transparent;
+    animation: orbSpin 6s linear infinite;
+  }
+  /* Ring 1 — upright equatorial orbit */
+  .orb-ring:nth-child(1) {
+    border-color: var(--accent);
+    border-right-color: transparent;
+    animation-duration: 5s;
+    transform: rotate(0deg);
+    box-shadow: 0 0 16px rgba(232,75,26,0.2), inset 0 0 8px rgba(232,75,26,0.05);
+  }
+  /* Ring 2 — tilted 60° like a second orbital plane */
+  .orb-ring:nth-child(2) {
+    inset: 18px;
+    border-color: var(--accent2);
+    border-left-color: transparent;
+    animation-duration: 8s;
+    animation-direction: reverse;
+    transform: rotate(60deg);
+    opacity: 0.85;
+  }
+  /* Ring 3 — tilted -60° like a third orbital plane */
+  .orb-ring:nth-child(3) {
+    inset: 36px;
+    border-color: var(--ink);
+    border-top-color: transparent;
+    animation-duration: 11s;
+    transform: rotate(-60deg);
+    opacity: 0.35;
+  }
+  .orb-core {
+    position: absolute;
+    inset: 60px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, var(--accent2), var(--accent), #8B1500);
+    animation: orbPulse 3s ease-in-out infinite;
+    box-shadow: 0 0 24px rgba(232,75,26,0.4), 0 0 48px rgba(232,75,26,0.15);
+  }
+  .orb-dots {
+    position: absolute; inset: -10px;
+    animation: orbSpin 14s linear infinite reverse;
+  }
+  .orb-dot {
+    position: absolute; width: 6px; height: 6px;
+    background: var(--accent); border-radius: 50%;
+    box-shadow: 0 0 6px var(--accent), 0 0 12px rgba(232,75,26,0.4);
+    transform: translate(-50%, -50%);
+  }
+  .orb-dot:nth-child(2) { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); width: 5px; height: 5px; }
+  .orb-dot:nth-child(4) { background: var(--accent); width: 4px; height: 4px; opacity: 0.6; }
+  .orb-dot:nth-child(5) { background: var(--accent2); box-shadow: 0 0 4px var(--accent2); width: 4px; height: 4px; opacity: 0.7; }
+  @keyframes orbSpin { to { transform: rotate(360deg); } }
+  @keyframes orbPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(0.88); opacity: 0.8; }
+  }
+
+  .hero-text-cell {
+    grid-column: 3 / -1;
+    padding: 48px 40px;
+    display: flex; flex-direction: column; justify-content: center;
+    gap: 20px;
+  }
+  .hero-body {
+    font-size: 14px; color: var(--ink-mid); line-height: 1.8; font-weight: 300;
+  }
+  .hero-body em { color: var(--accent); font-style: normal; font-weight: 500; }
+
+  .hero-stats {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+    background: var(--line); border: 1px solid var(--line);
+    margin-top: 8px;
+  }
+  .stat-item {
+    background: var(--cream); padding: 16px 20px;
+  }
+  .stat-num {
+    font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800;
+    color: var(--ink); line-height: 1;
+  }
+  .stat-num span { color: var(--accent); }
+  .stat-label {
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--ink-mute); margin-top: 4px;
+  }
+
+  /* Bottom row - headline */
+  .hero-headline-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+  }
+  .hero-headline-cell {
+    grid-column: 1 / 3;
+    padding: 40px 28px;
+    border-right: 1px solid var(--line);
+  }
+  .hero-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(42px, 6vw, 72px);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -2px;
+    color: var(--ink);
+  }
+  .hero-title .accent { color: var(--accent); }
+  .hero-subtitle-cell {
+    grid-column: 3 / -1;
+    padding: 40px 28px;
+    display: flex; align-items: flex-end;
+  }
+  .hero-sub {
+    font-size: 13px; color: var(--ink-mute); line-height: 1.8;
+    max-width: 300px;
+  }
+
+  /* FEATURES SECTION */
+  .features {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    border-bottom: 1px solid var(--line);
+    cursor:pointer;
+  }
+  .features-label {
+    grid-column: 1;
+    padding: 40px 28px;
+    border-right: 1px solid var(--line);
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .section-num {
+    font-family: 'Syne Mono', monospace;
+    font-size: 11px; color: var(--ink-mute); letter-spacing: 2px;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 4px; text-transform: uppercase;
+    color: var(--ink);
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    align-self: flex-end;
+  }
+  /* Feature card image backgrounds — REMOVED, replaced with inline SVG illustrations */
+  .features-grid {
+    grid-column: 2 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .feature-item {
+    padding: 0;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+  }
+  .feature-item:last-child { border-right: none; }
+
+  /* SVG illustration area at the top */
+  .feature-illustration {
+    width: 100%;
+    padding: 12px 20px 0;
+    flex-shrink: 0;
+    opacity: 1;
+    transition: opacity 0.4s ease;
+  }
+  .feature-illustration svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* On hover: illustration fades to more transparent */
+  .feature-item:hover .feature-illustration {
+    opacity: 0.35;
+  }
+
+  /* Text sits below illustration */
+  .feature-text {
+    padding: 8px 28px 44px;
+    flex: 1;
+  }
+
+  /* Accent underline sweep */
+  .feature-item::before {
+    content: '';
+    position: absolute; bottom: 0; left: 0;
+    width: 100%; height: 2px;
+    background: var(--accent);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform 0.4s ease;
+    z-index: 2;
+  }
+  .feature-item:hover::before { transform: scaleX(1); }
+
+  .feature-icon {
+    width: 36px; height: 36px; margin-bottom: 28px;
+    position: relative;
+  }
+  .fi-circle {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    transition: border-color 0.3s, background 0.3s;
+  }
+  .feature-item:hover .fi-circle {
+    border-color: var(--accent);
+    background: rgba(232,75,26,0.05);
+  }
+  .feature-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px; font-weight: 750;
+    letter-spacing: 0.5px; margin-bottom: 10px;
+    transition: text-shadow 0.4s ease;
+  }
+  .feature-desc {
+    font-size: 12px; color: var(--ink-mid); line-height: 1.8; font-weight: 400;
+    transition: text-shadow 0.4s ease;
+  }
+
+  /* Text shadow kicks in on hover */
+  .feature-item:hover .feature-name {
+    text-shadow: 0 2px 12px rgba(26,22,18,0.22), 0 1px 4px rgba(26,22,18,0.14);
+  }
+  .feature-item:hover .feature-desc {
+    text-shadow: 0 1px 8px rgba(26,22,18,0.16);
+  }
+
+  .feature-arrow {
+    position: absolute; bottom: 20px; right: 20px;
+    font-size: 16px; color: var(--ink-mute);
+    transition: color 0.2s, transform 0.2s;
+    z-index: 1;
+  }
+  .feature-item:hover .feature-arrow { color: var(--accent); transform: translate(3px, -3px); }
+
+  /* SUBJECTS SECTION */
+  .subjects {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    border-bottom: 1px solid var(--line);
+  }
+  .subjects-header {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    border-bottom: 1px solid var(--line);
+    height: 64px;
+  }
+  .subjects-title-cell {
+    grid-column: 1 / 3;
+    padding: 0 28px;
+    display: flex; align-items: center;
+    border-right: 1px solid var(--line);
+    font-family: 'Syne', sans-serif;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 4px; text-transform: uppercase;
+  }
+  .subjects-count-cell {
+    grid-column: 3;
+    padding: 0 28px;
+    display: flex; align-items: center;
+    border-right: 1px solid var(--line);
+    font-family: 'Syne Mono', monospace;
+    font-size: 11px; color: var(--ink-mute);
+  }
+  .subjects-action-cell {
+    grid-column: 4;
+    padding: 0 28px;
+    display: flex; align-items: center; justify-content: flex-end;
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--accent);
+  }
+  .subject-list {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  }
+  .subject-card {
+    padding: 36px 28px;
+    border-right: 1px solid var(--line);
+    cursor: pointer;
+    transition: background 0.3s;
+    position: relative; overflow: hidden;
+  }
+  .subject-card:last-child { border-right: none; }
+  .subject-card:hover { background: var(--cream-dark); }
+  .subject-card-num {
+    font-family: 'Syne Mono', monospace;
+    font-size: 10px; color: var(--ink-mute); letter-spacing: 2px;
+    margin-bottom: 20px;
+  }
+  .subject-color-bar {
+    width: 28px; height: 3px;
+    border-radius: 1px; margin-bottom: 16px;
+    transition: width 0.3s;
+  }
+  .subject-card:hover .subject-color-bar { width: 48px; }
+  .subject-card-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px; font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .subject-card-topics {
+    font-size: 11px; color: var(--ink-mute); line-height: 1.8;
+  }
+
+  /* HOW IT WORKS */
+  .how {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    border-bottom: 1px solid var(--line);
+  }
+  .how-label-cell {
+    grid-column: 1;
+    padding: 48px 28px;
+    border-right: 1px solid var(--line);
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .how-steps {
+    grid-column: 2 / -1;
+    display: grid;
+    grid-template-rows: auto auto auto auto;
+  }
+  .step-row {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    border-bottom: 1px solid var(--line);
+    min-height: 80px;
+    transition: background 0.3s;
+  }
+  .step-row:last-child { border-bottom: none; }
+  .step-row:hover { background: var(--cream-dark); }
+  .step-num {
+    padding: 24px 20px;
+    border-right: 1px solid var(--line);
+    font-family: 'Syne Mono', monospace;
+    font-size: 11px; color: var(--ink-mute);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .step-content {
+    padding: 24px 32px;
+    display: flex; align-items: center; gap: 24px;
+  }
+  .step-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px; font-weight: 700; min-width: 180px;
+  }
+  .step-desc {
+    font-size: 12px; color: var(--ink-mute); line-height: 1.7; font-weight: 300;
+  }
+  .step-tag {
+    margin-left: auto; flex-shrink: 0;
+    font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid rgba(232,75,26,0.3);
+    padding: 4px 10px;
+  }
+
+  /* CTA SECTION */
+  .cta-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    min-height: 320px;
+    border-bottom: 1px solid var(--line);
+  }
+  .cta-left {
+    grid-column: 1 / -1;
+    padding: 60px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .cta-headline {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -1.5px;
+    margin-bottom: 20px;
+  }
+  .cta-headline .accent { color: var(--accent); }
+  .cta-sub {
+    font-size: 13px; color: var(--ink-mute); line-height: 1.8; max-width: 340px;
+  }
+  .cta-sub em { color: var(--ink); font-style: normal; }
+  
+  .btn-primary {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--ink);
+    color: var(--cream);
+    font-family: 'Syne', sans-serif;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 3px; text-transform: uppercase;
+    padding: 18px 36px;
+    border: none; cursor: pointer;
+    transition: background 0.2s;
+    text-decoration: none; width: 260px; justify-content: center;
+  }
+  .btn-primary:hover { background: var(--accent); }
+  .btn-secondary {
+    display: flex; align-items: center; justify-content: center;
+    background: transparent;
+    color: var(--ink);
+    font-family: 'Syne', sans-serif;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 3px; text-transform: uppercase;
+    padding: 16px 36px;
+    border: 1px solid var(--line); cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+    text-decoration: none; width: 260px;
+  }
+  .btn-secondary:hover { border-color: var(--ink); }
+  .btn-note {
+    font-size: 10px; color: var(--ink-mute); letter-spacing: 1px;
+  }
+
+  /* FOOTER */
+  footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    height: 56px;
+    border-top: 1px solid var(--line);
+  }
+  .footer-logo {
+    grid-column: 1;
+    padding: 0 28px;
+    display: flex; align-items: center;
+    border-right: 1px solid var(--line);
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 13px;
+  }
+  .footer-copy {
+    grid-column: 2 / 4;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: var(--ink-mute); letter-spacing: 2px; text-transform: uppercase;
+    border-right: 1px solid var(--line);
+  }
+  .footer-right {
+    grid-column: 4;
+    display: flex; align-items: center; justify-content: flex-end;
+    padding: 0 28px;
+    font-size: 10px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase;
+  }
+
+  /* ANIMATIONS */
+  .reveal {
+    opacity: 0; transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  .reveal-left {
+    opacity: 0; transform: translateX(-20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .reveal-left.visible { opacity: 1; transform: translateX(0); }
+
+  /* TICKER */
+  .ticker-row {
+    position: fixed;
+    top: 52px;
+    left: 0; right: 0;
+    z-index: 99;
+    background: var(--cream);
+    height: 40px;
+    border-bottom: 1px solid var(--line);
+    overflow: hidden;
+  }
+  .ticker-wrap {
+    display: flex; align-items: center;
+    height: 100%;
+    overflow: hidden;
+  }
+  .ticker-inner {
+    display: flex; gap: 0;
+    animation: tickerMove 25s linear infinite;
+    white-space: nowrap;
+  }
+  .ticker-item {
+    padding: 0 32px;
+    font-family: 'Syne Mono', monospace;
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--ink-mute);
+    border-right: 5px solid var(--line);
+    display: flex; align-items: center; height: 40px;
+    cursor:default;
+    
+  }
+  .ticker-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); margin-right: 16px; }
+  @keyframes tickerMove { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  /* Stagger delays */
+  .d1 { transition-delay: 0.1s; }
+  .d2 { transition-delay: 0.2s; }
+  .d3 { transition-delay: 0.3s; }
+  .d4 { transition-delay: 0.4s; }
+  .d5 { transition-delay: 0.5s; }
+</style>
+</head>
+<body>
+
+<!-- GRID -->
+<div class="grid-overlay">
+  <div class="grid-col"></div>
+  <div class="grid-col"></div>
+  <div class="grid-col"></div>
+  <div class="grid-col"></div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">PATHWISE</div>
+  <div class="nav-center">
+    <a href="#features" class="nav-link">Capabilities</a>
+    <a href="#" class="nav-link nav-wip" data-label="Process">Process</a>
+    <a href="#" class="nav-link nav-wip" data-label="Domains">Domains</a>
+  </div>
+  <div class="nav-cta">
+     <span id="signupBtn" style="cursor:pointer; border: 1px solid var(--accent); padding: 8px 16px;">LOG IN/SIGN UP</span>
+  </div>
+</nav>
+
+<!-- UNDER CONSTRUCTION MODAL -->
+<div class="wip-backdrop" id="wipBackdrop">
+  <div class="wip-modal">
+    <div class="wip-icon">🚧</div>
+    <div class="wip-label" id="wipLabel">Process</div>
+    <h2 class="wip-title">Under Construction</h2>
+    <p class="wip-sub">This section is currently being built.<br/>Check back soon.</p>
+    <button class="wip-close" id="wipClose">← Go Back</button>
+  </div>
+</div>
+
+<style>
+  .wip-backdrop {
+    display: none;
+    position: fixed; inset: 0; z-index: 999;
+    background: rgba(26, 22, 18, 0.6);
+    backdrop-filter: blur(6px);
+    align-items: center; justify-content: center;
+  }
+  .wip-backdrop.active { display: flex; }
+  .wip-modal {
+    background: var(--cream);
+    border: 1px solid var(--line);
+    padding: 56px 48px;
+    text-align: center;
+    max-width: 400px; width: 90%;
+    animation: wipIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes wipIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  .wip-icon { font-size: 36px; margin-bottom: 16px; }
+  .wip-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 9px; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 12px; font-weight: 600;
+  }
+  .wip-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px; font-weight: 800;
+    letter-spacing: -0.5px; color: var(--ink);
+    margin-bottom: 12px;
+  }
+  .wip-sub {
+    font-size: 13px; color: var(--ink-mute);
+    line-height: 1.8; margin-bottom: 32px;
+  }
+  .wip-close {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 3px; text-transform: uppercase;
+    background: var(--ink); color: var(--cream);
+    border: none; padding: 14px 32px; cursor: pointer;
+    transition: background 0.2s;
+  }
+  .wip-close:hover { background: var(--accent); }
+</style>
+
+<!-- TICKER -->
+<div class="ticker-row">
+  <div class="ticker-wrap">
+    <div class="ticker-inner">
+      <div class="ticker-item"><span class="ticker-dot"></span>AI Powered</div>
+      <div class="ticker-item"><span class="ticker-dot"></span>Intent Detection</div>
+      <div class="ticker-item"><span class="ticker-dot"></span>Need Assessment</div>
+      <div class="ticker-item"><span class="ticker-dot"></span>Recommendation Engine</div>
+      <div class="ticker-item"><span class="ticker-dot"></span>Secure & Ethical</div>
+      <div class="ticker-item"><span class="ticker-dot"></span>Session Analytics</div>
+
+      <!-- duplicate -->
+      <div class="ticker-item"><span class="ticker-dot"></span>AI Powered</div>
+      <div class="ticker-item"><span class="ticker-dot"></span>Intent Detection</div>
+      <div class="ticker-item"><span class="ticker-dot"></span>Need Assessment</div>
+      <div class="ticker-item"><span class="ticker-dot"></span>Recommendation Engine</div>
+      <div class="ticker-item"><span class="ticker-dot"></span>Secure & Ethical</div>
+      <div class="ticker-item"><span class="ticker-dot"></span>Session Analytics</div>
+    </div>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+
+  <div class="hero-top">
+    <div class="hero-top-label">
+      <span class="eyebrow">AI-DRIVEN<br/>PERSONALIZED EDUCATION</span>
+    </div>
+    <div class="hero-top-empty">
+      
+    </div>
+    <div class="hero-top-right">
+      <div class="scroll-hint">
+        <div class="scroll-line"></div>
+        SCROLL DOWN
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-mid">
+    <div class="hero-orb-cell">
+      <div class="orb-container">
+        <div class="orb-ring"></div>
+        <div class="orb-ring"></div>
+        <div class="orb-ring"></div>
+        <div class="orb-core"></div>
+        <div class="orb-dots">
+          <div class="orb-dot" style="top:10%;left:50%;"></div>
+          <div class="orb-dot" style="top:50%;left:95%;"></div>
+          <div class="orb-dot" style="top:90%;left:50%;"></div>
+          <div class="orb-dot" style="top:50%;left:5%;"></div>
+          <div class="orb-dot" style="top:20%;left:80%;"></div>
+          <div class="orb-dot" style="top:80%;left:20%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-text-cell">
+      <p class="hero-body">
+        Pathwise analyzes student profiles, detects learning intent,
+        evaluates knowledge gaps, and generates
+        <em>intelligent personalized recommendations</em>
+        including courses, modules, and adaptive assessments —
+        while ensuring secure and ethical AI usage.
+      </p>
+
+      <div class="hero-stats">
+        <div class="stat-item">
+          <div class="stat-num">AI</div>
+          <div class="stat-label">Intent Detection</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">24/7</div>
+          <div class="stat-label">Need Assessment</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">100%</div>
+          <div class="stat-label">Personalized</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">Secure</div>
+          <div class="stat-label">Data Handling</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-headline-row">
+    <div class="hero-headline-cell">
+      <h1 class="hero-title">
+        Education<br/>
+        that adapts<br/>
+        <span class="accent">to you.</span>
+      </h1>
+    </div>
+    <div class="hero-subtitle-cell">
+      <p class="hero-sub">
+        An AI-powered system that assesses needs,
+        prioritizes recommendations,
+        and continuously improves through feedback and analytics.
+      </p>
+    </div>
+  </div>
+
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="features-label">
+    <span class="section-num">01</span>
+    <span class="section-title">Capabilities</span>
+  </div>
+
+  <div class="features-grid">
+
+    <div class="feature-item">
+      <div class="feature-text">
+        <div class="feature-name">Profile & Need Assessment</div>
+        <div class="feature-desc">
+          Structured questionnaires analyze grade level,
+          goals, interests, and performance data.
+        </div>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-text">
+        <div class="feature-name">Intent Detection</div>
+        <div class="feature-desc">
+          Identifies learning objectives such as exam preparation,
+          certification, or skill improvement.
+        </div>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-text">
+        <div class="feature-name">Recommendation Engine</div>
+        <div class="feature-desc">
+          Maps assessed needs to prioritized courses,
+          modules, and verified educational resources.
+        </div>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-text">
+        <div class="feature-name">Adaptive Feedback</div>
+        <div class="feature-desc">
+          Adjusts pace and difficulty dynamically
+          based on student feedback and performance.
+        </div>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-text">
+        <div class="feature-name">Session Logging & Analytics</div>
+        <div class="feature-desc">
+          Stores assessments and engagement data
+          for monitoring and reporting.
+        </div>
+      </div>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-text">
+        <div class="feature-name">Educator Escalation</div>
+        <div class="feature-desc">
+          Complex cases are seamlessly escalated
+          to human educators when required.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" style="display:flex; align-items:center; justify-content:center;">
+  <div class="cta-left" style="grid-column: 1 / -1; border-right: none; width: 100%; text-align: center; align-items: center;">
+    <h2 class="cta-headline">
+      Build your<br/>
+      personalized<br/>
+      <span class="accent">learning path.</span>
+    </h2>
+    <p class="cta-sub">
+      Move beyond one-size-fits-all education.
+      Let AI analyze, assess, recommend,
+      and adapt for scalable academic excellence.
+    </p>
+  </div>
+
+ 
+</section>
+
+<footer>
+  <div class="footer-logo">PATHWISE</div>
+  <div class="footer-copy">AI Personalized Learning Platform · 2026</div>
+  
+</footer>
+
+<script>
+  // Under construction modal
+  const backdrop = document.getElementById('wipBackdrop');
+  const wipLabel = document.getElementById('wipLabel');
+  const wipClose = document.getElementById('wipClose');
+
+  document.querySelectorAll('.nav-wip').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      wipLabel.textContent = link.dataset.label;
+      backdrop.classList.add('active');
+    });
+  });
+
+  wipClose.addEventListener('click', () => backdrop.classList.remove('active'));
+  backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.classList.remove('active'); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') backdrop.classList.remove('active'); });
+  
+  // Select the buttons
+  
+  const signupBtn = document.getElementById('signupBtn');
+
+
+  // Handle Signup Click
+  signupBtn.addEventListener('click', () => {
+    window.location.href = 'pathwise-auth.html?mode=signup';
+  });
+
+</script>
+</body>
+</html>
