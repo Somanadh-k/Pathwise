@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Pathwise — Begin Assessment</title>
+<script src="pathwise-config.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Syne+Mono&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
 <link rel="icon" type="image/x-png" href="./Logo.png">
 <style>
@@ -1273,7 +1274,7 @@
   }
 
   // ── API KEY — Replace with your Gemini API key from aistudio.google.com ──
-  const GEMINI_KEY = 'AIzaSyDm1UFiTyCnFApoS1MO62c6Gke0lBHH914';
+  const { GEMINI_URL } = window.PathwiseConfig;
 
   function startAnalysis() {
     if(state.topics.length === 0) return;
@@ -1409,7 +1410,7 @@ Return ONLY a valid JSON object. No markdown, no explanation, just JSON.
     let aiData = null;
     try {
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
+        GEMINI_URL,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
