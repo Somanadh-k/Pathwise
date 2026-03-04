@@ -4,7 +4,6 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Pathwise — Auth</title>
-<script src="pathwise-config.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
 <link rel="icon" type="image/x-png" href="./Logo.png">
 <style>
@@ -650,7 +649,7 @@ function checkStrength(inp) {
   }
 }
 
-const API = window.PathwiseConfig.API;
+const API = 'http://localhost:5000/api/v1';
 
 // ─── OTP HELPERS ───
 function otpNext(inp, idx) {
